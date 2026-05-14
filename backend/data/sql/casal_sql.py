@@ -22,3 +22,14 @@ DELETAR = """
 DELETE FROM Casal
 WHERE id = %s;
 """
+
+LISTAR_TODOS = """
+SELECT id, id_usuario_1, id_usuario_2, chave_pix, data_casamento
+FROM Casal;
+"""
+
+BUSCAR_POR_ID = """
+SELECT id, id_usuario_1, id_usuario_2, chave_pix, data_casamento
+FROM Casal
+WHERE id = %s;
+"""

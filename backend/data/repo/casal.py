@@ -49,3 +49,44 @@ def deletar(cod_casal: int) -> bool:
     except Exception as e:
         print(f"Erro ao deletar casal: {e}")
         return False
+
+def listar_todos() -> list[Casal]:
+    try:
+        with get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute(LISTAR_TODOS)
+            resultados = cursor.fetchall()
+            cursor.close()
+            casais = []
+            for resultado in resultados:
+                casais.append(Casal(
+                    id=resultado[0],
+                    id_usuario_1=resultado[1],
+                    id_usuario_2=resultado[2],
+                    chave_pix=resultado[3],
+                    data_casamento=resultado[4]
+                ))
+            return casais
+    except Exception as e:
+        print(f"Erro ao listar casais: {e}")
+        return []
+
+def buscar_por_id(cod_casal: int) -> Optional[Casal]:
+    try:
+        with get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute(BUSCAR_POR_ID, (cod_casal,))
+            resultado = cursor.fetchone()
+            cursor.close()
+            if resultado:
+                return Casal(
+                    id=resultado[0],
+                    id_usuario_1=resultado[1],
+                    id_usuario_2=resultado[2],
+                    chave_pix=resultado[3],
+                    data_casamento=resultado[4]
+                )
+            return None
+    except Exception as e:
+        print(f"Erro ao buscar casal por id: {e}")
+        return None

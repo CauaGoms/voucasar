@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { Mail, Lock, AlertCircle } from 'lucide-react';
 
@@ -8,8 +8,14 @@ export const LoginPage: React.FC = () => {
     const [senha, setSenha] = useState('');
     const [error, setError] = useState('');
     const [isLoading, setIsLoading] = useState(false);
-    const { login } = useAuth();
+    const { login, usuario } = useAuth();
     const navigate = useNavigate();
+
+    useEffect(() => {
+        if (usuario) {
+            navigate('/dashboard');
+        }
+    }, [usuario, navigate]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -27,15 +33,20 @@ export const LoginPage: React.FC = () => {
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-primary-50 to-primary-100 flex items-center justify-center px-4">
-            <div className="w-full max-w-md">
-                <div className="bg-white rounded-lg shadow-xl p-8">
-                    <div className="text-center mb-8">
-                        <h1 className="text-4xl font-bold text-primary-600 mb-2">💍 VouCasar</h1>
-                        <p className="text-gray-600">Organize sua lista de casamento</p>
-                    </div>
+        <div className="min-h-screen flex">
+            {/* Lado Esquerdo - Foto */}
+            <div
+                className="hidden lg:block lg:w-1/2 bg-cover bg-center"
+                style={{ backgroundImage: "url('/noivos.jpg')" }}
+            ></div>
 
-                    {error && (
+            {/* Lado Direito - Formulário */}
+            <div className="w-full lg:w-1/2 flex flex-col items-center justify-center p-8 sm:p-12 bg-gray-50">
+                <div className="w-full max-w-md bg-white rounded-xl shadow-lg p-8 sm:p-10 border border-gray-100">
+                    <div className="text-center mb-8">
+                        <h1 className="text-4xl font-serif tracking-wide text-primary-600 mb-2">VouCasar</h1>
+                        <p className="text-gray-600 text-lg mt-2">Acesse sua lista de casamento</p>
+                    </div>                    {error && (
                         <div className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4 flex items-gap-3">
                             <AlertCircle className="text-red-600 flex-shrink-0" size={20} />
                             <p className="text-red-700 text-sm">{error}</p>

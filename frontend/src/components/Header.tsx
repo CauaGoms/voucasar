@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { LogOut, Menu, X } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useState } from 'react';
@@ -7,7 +7,13 @@ import { useState } from 'react';
 export const Header: React.FC = () => {
     const { usuario, logout } = useAuth();
     const navigate = useNavigate();
+    const location = useLocation();
     const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+    // Don't render header on login/register pages
+    if (location.pathname === '/' || location.pathname === '/login' || location.pathname === '/register') {
+        return null;
+    }
 
     const handleLogout = async () => {
         await logout();
@@ -18,8 +24,8 @@ export const Header: React.FC = () => {
         <header className="bg-white shadow">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex justify-between items-center h-16">
-                    <Link to="/" className="flex items-center">
-                        <span className="text-2xl font-bold text-primary-600">💍 VouCasar</span>
+                    <Link to={usuario ? "/dashboard" : "/login"} className="flex items-center">
+                        <span className="text-2xl font-bold text-primary-600">💍</span>
                     </Link>
 
                     {usuario && (

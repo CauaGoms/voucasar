@@ -70,7 +70,26 @@ async def request_context_middleware(request: Request, call_next):
 
 @app.middleware("http")
 async def security_headers_middleware(request: Request, call_next):
+    # Proteção CSRF
+    if request.method in ["POST", "PUT", "DELETE", "PATCH"]:
+        if request.url.path not in ["/usuario", "/usuario/auth/login"]: # Ignorar nestas rotas 
+            token_recebido = csrf_protection.get_token_from_request(request)
+            if not csrf_protection.validate_token(request, token_recebido):
+                return JSONResponse(status_code=403, content={"detail": "Token CSRF inválido ou ausente"})
+
     response = await call_next(request)
+    
+    # Garantir que o token seja criado e enviado pro frontend
+    token = csrf_protection.get_or_create_token(request)
+    if token:
+        response.set_cookie(
+            key="csrf_token",
+            value=token,
+            httponly=False,  # O frontend precisa ler pro Axios pegar
+            samesite="lax",
+            secure=IS_PRODUCTION
+        )
+
     response.headers["X-Content-Type-Options"] = "nosniff"
     response.headers["X-Frame-Options"] = "DENY"
     response.headers["X-XSS-Protection"] = "1; mode=block"
@@ -122,6 +141,7 @@ from backend.routers.casal import router as casal_router
 from backend.routers.presente import router as presente_router
 from backend.routers.fonte_compra import router as fonte_compra_router
 from backend.routers.transacao_presente import router as transacao_presente_router
+from util.csrf import csrf_protection
 
 # Incluindo routers
 app.include_router(usuario_router)
