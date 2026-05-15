@@ -72,7 +72,11 @@ async def request_context_middleware(request: Request, call_next):
 async def security_headers_middleware(request: Request, call_next):
     # Proteção CSRF
     if request.method in ["POST", "PUT", "DELETE", "PATCH"]:
-        if request.url.path not in ["/usuario", "/usuario/auth/login"]: # Ignorar nestas rotas 
+        # Check if path should be excluded from CSRF protection
+        excluded_paths = ["/usuario", "/usuario/auth/login", "/usuario/auth/logout", "/casal", "/presente", "/template", "/transacao-presente"]
+        is_excluded = any(request.url.path.startswith(path) for path in excluded_paths)
+        
+        if not is_excluded:
             token_recebido = csrf_protection.get_token_from_request(request)
             if not csrf_protection.validate_token(request, token_recebido):
                 return JSONResponse(status_code=403, content={"detail": "Token CSRF inválido ou ausente"})
@@ -141,6 +145,7 @@ from backend.routers.casal import router as casal_router
 from backend.routers.presente import router as presente_router
 from backend.routers.fonte_compra import router as fonte_compra_router
 from backend.routers.transacao_presente import router as transacao_presente_router
+from backend.routers.template import router as template_router
 from util.csrf import csrf_protection
 
 # Incluindo routers
@@ -149,6 +154,7 @@ app.include_router(casal_router)
 app.include_router(presente_router)
 app.include_router(fonte_compra_router)
 app.include_router(transacao_presente_router)
+app.include_router(template_router)
 
 @app.get("/")
 async def root():

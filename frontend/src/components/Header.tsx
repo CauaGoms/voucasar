@@ -10,8 +10,13 @@ export const Header: React.FC = () => {
     const location = useLocation();
     const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-    // Don't render header on login/register pages
-    if (location.pathname === '/' || location.pathname === '/login' || location.pathname === '/register') {
+    // Don't render header on login/register pages, or any public guest pages
+    if (
+        location.pathname === '/' || 
+        location.pathname === '/login' || 
+        location.pathname === '/register' ||
+        location.pathname.startsWith('/casamento/')
+    ) {
         return null;
     }
 
@@ -21,11 +26,11 @@ export const Header: React.FC = () => {
     };
 
     return (
-        <header className="bg-white shadow">
+        <header className="bg-transparent border-b border-primary-200/50 backdrop-blur-sm">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex justify-between items-center h-16">
                     <Link to={usuario ? "/dashboard" : "/login"} className="flex items-center">
-                        <span className="text-2xl font-bold text-primary-600">💍</span>
+                        <span className="text-3xl font-brand-logo text-primary-600">VouCasar</span>
                     </Link>
 
                     {usuario && (
@@ -37,7 +42,6 @@ export const Header: React.FC = () => {
                                 Presentes
                             </Link>
                             <div className="flex items-center gap-4">
-                                <span className="text-sm text-gray-600">{usuario.nome}</span>
                                 <button
                                     onClick={handleLogout}
                                     className="flex items-center gap-2 text-gray-700 hover:text-red-600 transition"

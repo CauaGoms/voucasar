@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Request, Body, HTTPException, status
+from fastapi import APIRouter, Request, HTTPException, status
 from fastapi.responses import JSONResponse
 import logging
 from util.auth_decorator import requer_autenticacao
@@ -10,9 +10,10 @@ logger = logging.getLogger(__name__)
 
 @router.post("")
 @requer_autenticacao()
-async def criar_presente(request: Request, presente_data: dict = Body(...), usuario_logado: dict = None):
+async def criar_presente(request: Request, usuario_logado: dict = None):
     """Cria um novo presente"""
     try:
+        presente_data = await request.json()
         presente = Presente(
             id=0,
             id_casal=presente_data.get("id_casal"),
@@ -29,7 +30,7 @@ async def criar_presente(request: Request, presente_data: dict = Body(...), usua
             "id_categoria": presente.id_categoria,
             "titulo": presente.titulo,
             "descricao": presente.descricao,
-            "valor_estimado": presente.valor_estimado,
+            "valor_estimado": float(presente.valor_estimado) if presente.valor_estimado is not None else None,
             "status": presente.status,
             "mensagem": "Presente criado com sucesso"
         }, status_code=status.HTTP_201_CREATED)
@@ -51,7 +52,7 @@ async def buscar_presente_endpoint(presente_id: int, request: Request, usuario_l
             "id_categoria": presente.id_categoria,
             "titulo": presente.titulo,
             "descricao": presente.descricao,
-            "valor_estimado": presente.valor_estimado,
+            "valor_estimado": float(presente.valor_estimado) if presente.valor_estimado is not None else None,
             "status": presente.status
         })
     except Exception as e:
@@ -60,9 +61,10 @@ async def buscar_presente_endpoint(presente_id: int, request: Request, usuario_l
 
 @router.put("/{presente_id}")
 @requer_autenticacao()
-async def atualizar_presente_endpoint(presente_id: int, request: Request, presente_data: dict = Body(...), usuario_logado: dict = None):
+async def atualizar_presente_endpoint(presente_id: int, request: Request, usuario_logado: dict = None):
     """Atualiza um presente"""
     try:
+        presente_data = await request.json()
         presente = presente_repo.buscar_por_id(presente_id)
         if not presente:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Presente não encontrado")
@@ -80,7 +82,7 @@ async def atualizar_presente_endpoint(presente_id: int, request: Request, presen
             "id_categoria": presente.id_categoria,
             "titulo": presente.titulo,
             "descricao": presente.descricao,
-            "valor_estimado": presente.valor_estimado,
+            "valor_estimado": float(presente.valor_estimado) if presente.valor_estimado is not None else None,
             "status": presente.status,
             "mensagem": "Presente atualizado com sucesso"
         })
@@ -112,7 +114,7 @@ async def listar_presentes_por_casal_endpoint(casal_id: int, request: Request, u
                 "id_categoria": p.id_categoria,
                 "titulo": p.titulo,
                 "descricao": p.descricao,
-                "valor_estimado": p.valor_estimado,
+                "valor_estimado": float(p.valor_estimado) if p.valor_estimado is not None else None,
                 "status": p.status
             } for p in presentes
         ])

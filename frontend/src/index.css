@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Alex+Brush&family=Great+Vibes&family=Parisienne&family=Pinyon+Script&family=Inter:wght@300;400;500;600;700&family=Montserrat:wght@300;400;500;600&family=Playfair+Display:wght@400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -9,41 +11,91 @@
 }
 
 body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-        'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-        sans-serif;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    background-color: #f9fafb;
+    background-color: #f3ece1; /* Fundo base (escurecido) */
+    background-image: 
+        radial-gradient(at 0% 0%, #f6e9ce 0px, transparent 50%), /* Degradê superior esquerdo */
+        radial-gradient(at 100% 100%, #f4e9d8 0px, transparent 50%); /* Degradê inferior direito */
+
+    background-attachment: fixed;
+    color: #2d2d2d;
+    min-height: 100vh;
 }
 
 code {
-    font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-        monospace;
+    font-family: 'Fira Code', monospace;
 }
 
 @layer components {
     .btn {
-        @apply px-4 py-2 rounded-lg font-semibold transition-colors duration-200;
+        @apply px-4 py-3 rounded-lg font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2;
     }
 
+    .font-script-logo {
+        font-family: 'Parisienne', 'Great Vibes', cursive !important;
+    }
+
+    .font-brand-logo {
+        font-family: 'Alex Brush', cursive !important;
+    }
+
+
     .btn-primary {
-        @apply btn bg-primary-600 text-white hover:bg-primary-700;
+        @apply bg-primary-800 text-white hover:bg-primary-900 focus:ring-primary-500 shadow-sm transition-colors;
     }
 
     .btn-secondary {
-        @apply btn bg-gray-200 text-gray-800 hover:bg-gray-300;
+        @apply bg-white border border-primary-200 text-primary-900 hover:bg-primary-50 focus:ring-primary-500 shadow-sm transition-colors;
     }
 
     .btn-danger {
-        @apply btn bg-red-600 text-white hover:bg-red-700;
+        @apply bg-red-50 text-red-600 hover:bg-red-100 focus:ring-red-500 transition-colors;
     }
 
+    .btn-ghost {
+        @apply text-primary-700 hover:text-primary-900 hover:bg-primary-50 transition-colors;
+    }
+
+
     .input-field {
-        @apply w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500;
+        @apply w-full px-4 py-3 bg-white/50 border border-primary-200 rounded-lg text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white transition;
+    }
+
+    .label {
+        @apply block text-sm font-medium text-gray-700 mb-2;
     }
 
     .card {
-        @apply bg-white rounded-lg shadow-md p-6;
+        @apply bg-white/40 rounded-2xl border border-primary-200/30 shadow-lg shadow-primary-900/5 hover:shadow-xl hover:shadow-primary-900/10 transition-all duration-300 p-8 backdrop-blur-md;
+    }
+
+    .section-title {
+        @apply text-3xl font-serif font-semibold text-gray-900 mb-2;
+    }
+
+    .section-subtitle {
+        @apply text-lg text-gray-600 mb-6;
+    }
+
+    .alert {
+        @apply rounded-lg p-4 flex gap-3 items-start;
+    }
+
+    .alert-error {
+        @apply bg-red-50 border border-red-200 text-red-800;
+    }
+
+    .alert-success {
+        @apply bg-green-50 border border-green-200 text-green-800;
+    }
+
+    .alert-info {
+        @apply bg-blue-50 border border-blue-200 text-blue-800;
+    }
+
+    .alert-warning {
+        @apply bg-yellow-50 border border-yellow-200 text-yellow-800;
     }
 }

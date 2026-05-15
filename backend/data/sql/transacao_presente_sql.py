@@ -2,7 +2,7 @@ CRIAR_TABELA = """
 CREATE TABLE IF NOT EXISTS TransacaoPresente (
     id INT AUTO_INCREMENT PRIMARY KEY,
     id_presente INT NOT NULL,
-    id_fonte_compra INT NOT NULL,
+    id_fonte_compra INT NULL,
     id_casal INT NOT NULL,
     id_convidado INT NOT NULL,
     assinatura_remetente VARCHAR(255),

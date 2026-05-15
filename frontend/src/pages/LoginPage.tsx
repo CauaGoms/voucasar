@@ -33,39 +33,39 @@ export const LoginPage: React.FC = () => {
     };
 
     return (
-        <div className="min-h-screen flex">
+        <div className="min-h-screen flex bg-transparent">
             {/* Lado Esquerdo - Foto */}
             <div
-                className="hidden lg:block lg:w-1/2 bg-cover bg-center"
+                className="hidden lg:flex lg:w-1/2 bg-cover bg-center relative"
                 style={{ backgroundImage: "url('/noivos.jpg')" }}
-            ></div>
+            >
+                <div className="absolute inset-0 bg-black/20"></div>
+            </div>
 
             {/* Lado Direito - Formulário */}
-            <div className="w-full lg:w-1/2 flex flex-col items-center justify-center p-8 sm:p-12 bg-gray-50">
-                <div className="w-full max-w-md bg-white rounded-xl shadow-lg p-8 sm:p-10 border border-gray-100">
-                    <div className="text-center mb-8">
-                        <h1 className="text-4xl font-serif tracking-wide text-primary-600 mb-2">VouCasar</h1>
-                        <p className="text-gray-600 text-lg mt-2">Acesse sua lista de casamento</p>
+            <div className="w-full lg:w-1/2 flex flex-col items-center justify-center p-6 sm:p-12">
+                <div className="w-full max-w-sm">
+                    <div className="text-center mb-10">
+                        <h1 className="text-8xl font-brand-logo font-normal text-primary-800 mb-3">VouCasar</h1>
+                        <p className="text-gray-600 text-base font-light">Organize sua lista de casamento</p>
                     </div>                    {error && (
-                        <div className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4 flex items-gap-3">
-                            <AlertCircle className="text-red-600 flex-shrink-0" size={20} />
+                        <div className="alert alert-error mb-6">
+                            <AlertCircle className="text-red-600 flex-shrink-0 mt-0.5" size={20} />
                             <p className="text-red-700 text-sm">{error}</p>
                         </div>
                     )}
 
                     <form onSubmit={handleSubmit} className="space-y-5">
                         <div>
-                            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-                                Email
-                            </label>
+                            <label htmlFor="email" className="label">Email</label>
                             <div className="relative">
-                                <Mail className="absolute left-3 top-3 text-gray-400" size={20} />
+                                <Mail className="absolute left-4 top-3.5 text-gray-400" size={18} />
                                 <input
                                     id="email"
                                     type="email"
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
-                                    className="input-field pl-10"
+                                    className="input-field pl-11"
                                     placeholder="seu@email.com"
                                     required
                                 />
@@ -73,17 +73,15 @@ export const LoginPage: React.FC = () => {
                         </div>
 
                         <div>
-                            <label htmlFor="senha" className="block text-sm font-medium text-gray-700 mb-2">
-                                Senha
-                            </label>
+                            <label htmlFor="senha" className="label">Senha</label>
                             <div className="relative">
-                                <Lock className="absolute left-3 top-3 text-gray-400" size={20} />
+                                <Lock className="absolute left-4 top-3.5 text-gray-400" size={18} />
                                 <input
                                     id="senha"
                                     type="password"
                                     value={senha}
                                     onChange={(e) => setSenha(e.target.value)}
-                                    className="input-field pl-10"
+                                    className="input-field pl-11"
                                     placeholder="••••••••"
                                     required
                                 />
@@ -93,17 +91,17 @@ export const LoginPage: React.FC = () => {
                         <button
                             type="submit"
                             disabled={isLoading}
-                            className="btn-primary w-full disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="btn btn-primary w-full"
                         >
                             {isLoading ? 'Autenticando...' : 'Entrar'}
                         </button>
                     </form>
 
-                    <div className="text-center text-sm text-gray-600 mt-6 flex flex-col gap-2">
-                        <p>Não tem conta?</p>
+                    <div className="mt-8 text-center border-t border-gray-200 pt-6">
+                        <p className="text-gray-600 text-sm mb-4">Não tem conta?</p>
                         <button
                             onClick={() => navigate('/register')}
-                            className="text-primary-600 font-semibold hover:text-primary-500 hover:underline"
+                            className="btn btn-ghost w-full"
                         >
                             Cadastre-se agora
                         </button>

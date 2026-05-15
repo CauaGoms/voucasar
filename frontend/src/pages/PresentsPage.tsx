@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { presenteAPI, Presente, casalAPI, Casal } from '../lib/services';
-import { Plus, Trash2, AlertCircle, Loader, Heart, ChevronLeft } from 'lucide-react';
+import { Plus, Trash2, AlertCircle, Loader, Heart, ChevronLeft, Check, Search } from 'lucide-react';
 
 export const PresentsPage: React.FC = () => {
     const { casalId } = useParams<{ casalId: string }>();
@@ -11,13 +11,14 @@ export const PresentsPage: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [showForm, setShowForm] = useState(false);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [filtroStatus, setFiltroStatus] = useState('todos');
 
     const [formData, setFormData] = useState({
         titulo: '',
         descricao: '',
         valor_estimado: '',
         id_categoria: '',
-        status: 'disponivel',
     });
 
     useEffect(() => {
@@ -47,20 +48,20 @@ export const PresentsPage: React.FC = () => {
         e.preventDefault();
         try {
             const novo = await presenteAPI.criar({
+                id: 0,
                 id_casal: parseInt(casalId!),
+                id_categoria: formData.id_categoria,
                 titulo: formData.titulo,
                 descricao: formData.descricao,
                 valor_estimado: parseFloat(formData.valor_estimado),
-                id_categoria: formData.id_categoria,
-                status: formData.status,
-            });
+                status: 'disponivel',
+            } as Presente);
             setPresentes([...presentes, novo]);
             setFormData({
                 titulo: '',
                 descricao: '',
                 valor_estimado: '',
                 id_categoria: '',
-                status: 'disponivel',
             });
             setShowForm(false);
         } catch (err: any) {
@@ -81,9 +82,44 @@ export const PresentsPage: React.FC = () => {
         }
     };
 
+    const handleToggleComprado = async (id: number, comprado: boolean) => {
+        try {
+            const presente = presentes.find((p) => p.id === id);
+            if (presente) {
+                await presenteAPI.atualizar({
+                    ...presente,
+                    status: comprado ? 'disponivel' : 'comprado',
+                } as Presente);
+                setPresentes(
+                    presentes.map((p) =>
+                        p.id === id ? { ...p, status: comprado ? 'disponivel' : 'comprado' } : p
+                    )
+                );
+            }
+        } catch (err) {
+            setError('Erro ao atualizar presente');
+        }
+    };
+
+    const presentesFiltrados = presentes.filter((p) => {
+        const matchSearch = p.titulo.toLowerCase().includes(searchTerm.toLowerCase());
+        const matchStatus =
+            filtroStatus === 'todos' ||
+            (filtroStatus === 'comprado' && p.status === 'comprado') ||
+            (filtroStatus === 'nao-comprado' && p.status !== 'comprado');
+        return matchSearch && matchStatus;
+    });
+
+    const totalPresentes = presentes.length;
+    const totalComprados = presentes.filter((p) => p.status === 'comprado').length;
+    const totalPreco = presentes.reduce((acc, p) => acc + (p.valor_estimado || 0), 0);
+    const totalCompradoPreco = presentes
+        .filter((p) => p.status === 'comprado')
+        .reduce((acc, p) => acc + (p.valor_estimado || 0), 0);
+
     if (loading) {
         return (
-            <div className="flex items-center justify-center min-h-screen">
+            <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50">
                 <div className="flex flex-col items-center gap-4">
                     <Loader className="animate-spin text-primary-600" size={32} />
                     <p className="text-gray-600">Carregando presentes...</p>
@@ -93,175 +129,229 @@ export const PresentsPage: React.FC = () => {
     }
 
     return (
-        <div className="min-h-screen bg-gray-50">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                <button
-                    onClick={() => navigate('/dashboard')}
-                    className="flex items-center gap-2 text-primary-600 hover:text-primary-700 mb-6"
-                >
-                    <ChevronLeft size={20} />
-                    Voltar para Dashboard
-                </button>
-
-                <div className="mb-8">
-                    <div className="flex items-center gap-2 mb-2">
-                        <Heart className="text-primary-600" size={28} />
-                        <h1 className="text-3xl font-bold text-gray-900">Lista de Presentes</h1>
+        <div className="min-h-screen">
+            {/* Main Content */}
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+                <div className="flex items-center gap-4 mb-12">
+                    <button
+                        onClick={() => navigate('/dashboard')}
+                        className="btn btn-ghost p-2"
+                    >
+                        <ChevronLeft size={24} />
+                    </button>
+                    <div className="flex-1">
+                        <h1 className="text-4xl font-serif font-semibold text-gray-900">Gerenciar Lista de Presentes</h1>
+                        <p className="text-gray-600 mt-1">Casal #{casalId}</p>
                     </div>
-                    {casal && (
-                        <p className="text-gray-600">
-                            Casal {casal.id} - {new Date(casal.data_casamento).toLocaleDateString('pt-BR')}
-                        </p>
-                    )}
+                    <button
+                        onClick={() => setShowForm(true)}
+                        className="btn btn-primary flex gap-2 items-center"
+                    >
+                        <Plus size={20} />
+                        Novo Presente
+                    </button>
                 </div>
 
                 {error && (
-                    <div className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4 flex items-gap-3">
-                        <AlertCircle className="text-red-600 flex-shrink-0" size={20} />
-                        <p className="text-red-700">{error}</p>
+                    <div className="alert alert-error mb-6">
+                        <AlertCircle className="text-red-600 flex-shrink-0 mt-0.5" size={20} />
+                        <p className="text-red-700 text-sm">{error}</p>
                     </div>
                 )}
 
-                <button
-                    onClick={() => setShowForm(!showForm)}
-                    className="btn-primary flex items-center gap-2 mb-8"
-                >
-                    <Plus size={20} />
-                    {showForm ? 'Cancelar' : 'Adicionar Presente'}
-                </button>
-
-                {showForm && (
-                    <div className="card mb-8">
-                        <h2 className="text-xl font-semibold text-gray-900 mb-6">Novo Presente</h2>
-                        <form onSubmit={handleSubmit} className="space-y-4">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        Título *
-                                    </label>
-                                    <input
-                                        type="text"
-                                        value={formData.titulo}
-                                        onChange={(e) => setFormData({ ...formData, titulo: e.target.value })}
-                                        className="input-field"
-                                        required
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        Categoria
-                                    </label>
-                                    <input
-                                        type="text"
-                                        value={formData.id_categoria}
-                                        onChange={(e) => setFormData({ ...formData, id_categoria: e.target.value })}
-                                        className="input-field"
-                                        placeholder="Ex: Cozinha, Decoração"
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        Valor Estimado (R$)
-                                    </label>
-                                    <input
-                                        type="number"
-                                        step="0.01"
-                                        value={formData.valor_estimado}
-                                        onChange={(e) => setFormData({ ...formData, valor_estimado: e.target.value })}
-                                        className="input-field"
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        Status
-                                    </label>
-                                    <select
-                                        value={formData.status}
-                                        onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                                        className="input-field"
-                                    >
-                                        <option value="disponivel">Disponível</option>
-                                        <option value="comprado">Comprado</option>
-                                        <option value="reservado">Reservado</option>
-                                    </select>
-                                </div>
-                            </div>
-
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Descrição
-                                </label>
-                                <textarea
-                                    value={formData.descricao}
-                                    onChange={(e) => setFormData({ ...formData, descricao: e.target.value })}
-                                    className="input-field"
-                                    rows={3}
-                                    placeholder="Descrição do presente"
-                                />
-                            </div>
-
-                            <button type="submit" className="btn-primary">
-                                Criar Presente
-                            </button>
-                        </form>
+                {/* Stats */}
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
+                    <div className="card">
+                        <p className="text-sm text-gray-600 mb-1">Total de Presentes</p>
+                        <p className="text-3xl font-serif font-semibold text-gray-900">{totalPresentes}</p>
                     </div>
-                )}
+                    <div className="card">
+                        <p className="text-sm text-gray-600 mb-1">Comprados</p>
+                        <p className="text-3xl font-serif font-semibold text-green-600">{totalComprados}</p>
+                    </div>
+                    <div className="card">
+                        <p className="text-sm text-gray-600 mb-1">Valor Total</p>
+                        <p className="text-3xl font-serif font-semibold text-gray-900">
+                            R$ {totalPreco.toFixed(2)}
+                        </p>
+                    </div>
+                    <div className="card">
+                        <p className="text-sm text-gray-600 mb-1">Valor Comprado</p>
+                        <p className="text-3xl font-serif font-semibold text-primary-600">
+                            R$ {totalCompradoPreco.toFixed(2)}
+                        </p>
+                    </div>
+                </div>
 
-                {presentes.length === 0 ? (
+                {/* Filtros */}
+                <div className="mb-8 flex flex-col sm:flex-row gap-4">
+                    <div className="flex-1 relative">
+                        <Search className="absolute left-4 top-3.5 text-gray-400" size={18} />
+                        <input
+                            type="text"
+                            placeholder="Buscar presentes..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="input-field pl-11 w-full"
+                        />
+                    </div>
+                    <select
+                        value={filtroStatus}
+                        onChange={(e) => setFiltroStatus(e.target.value)}
+                        className="input-field"
+                    >
+                        <option value="todos">Todos</option>
+                        <option value="nao-comprado">Não Comprados</option>
+                        <option value="comprado">Comprados</option>
+                    </select>
+                </div>
+
+                {/* Lista de Presentes */}
+                {presentesFiltrados.length === 0 ? (
                     <div className="card text-center py-12">
-                        <Heart className="mx-auto text-gray-300 mb-4" size={48} />
-                        <h3 className="text-lg font-semibold text-gray-700 mb-2">Nenhum presente cadastrado</h3>
-                        <p className="text-gray-600">Comece adicionando presentes à sua lista</p>
+                        <Heart className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                        <p className="text-gray-600 mb-4">Nenhum presente encontrado</p>
+                        <button
+                            onClick={() => setShowForm(true)}
+                            className="btn btn-primary"
+                        >
+                            Adicionar Presente
+                        </button>
                     </div>
                 ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {presentes.map((presente) => (
-                            <div key={presente.id} className="card hover:shadow-lg transition-shadow">
-                                <div className="flex justify-between items-start mb-3">
-                                    <h3 className="text-lg font-semibold text-gray-900 flex-1">{presente.titulo}</h3>
+                    <div className="grid gap-4">
+                        {presentesFiltrados.map((presente) => (
+                            <div
+                                key={presente.id}
+                                className={`card flex items-center justify-between transition ${presente.status === 'comprado' ? 'bg-green-50' : ''
+                                    }`}
+                            >
+                                <div className="flex items-center gap-4 flex-1">
                                     <button
-                                        onClick={() => handleDelete(presente.id)}
-                                        className="text-red-600 hover:text-red-700"
-                                    >
-                                        <Trash2 size={20} />
-                                    </button>
-                                </div>
-
-                                {presente.id_categoria && (
-                                    <p className="text-sm text-primary-600 font-medium mb-2">{presente.id_categoria}</p>
-                                )}
-
-                                {presente.descricao && (
-                                    <p className="text-sm text-gray-600 mb-3">{presente.descricao}</p>
-                                )}
-
-                                <div className="mb-3 pb-3 border-t border-gray-200">
-                                    <p className="text-lg font-bold text-primary-600">
-                                        R$ {presente.valor_estimado?.toFixed(2) || 'N/A'}
-                                    </p>
-                                </div>
-
-                                <div className="flex items-center justify-between">
-                                    <span
-                                        className={`px-3 py-1 rounded-full text-xs font-medium ${presente.status === 'disponivel'
-                                                ? 'bg-green-100 text-green-800'
-                                                : presente.status === 'reservado'
-                                                    ? 'bg-yellow-100 text-yellow-800'
-                                                    : 'bg-blue-100 text-blue-800'
+                                        onClick={() =>
+                                            handleToggleComprado(presente.id, presente.status === 'comprado')
+                                        }
+                                        className={`flex-shrink-0 w-6 h-6 rounded border-2 flex items-center justify-center transition ${presente.status === 'comprado'
+                                            ? 'bg-green-600 border-green-600'
+                                            : 'border-gray-300 hover:border-green-600'
                                             }`}
                                     >
-                                        {presente.status}
-                                    </span>
-                                    <button className="btn-secondary text-sm">Editar</button>
+                                        {presente.status === 'comprado' && (
+                                            <Check size={16} className="text-white" />
+                                        )}
+                                    </button>
+                                    <div className="flex-1">
+                                        <h3
+                                            className={`font-semibold ${presente.status === 'comprado'
+                                                ? 'text-gray-500 line-through'
+                                                : 'text-gray-900'
+                                                }`}
+                                        >
+                                            {presente.titulo}
+                                        </h3>
+                                        {presente.descricao && (
+                                            <p className="text-sm text-gray-600">{presente.descricao}</p>
+                                        )}
+                                    </div>
+                                </div>
+                                <div className="flex items-center gap-4">
+                                    <p className="text-lg font-semibold text-gray-900 min-w-[100px] text-right">
+                                        R$ {presente.valor_estimado?.toFixed(2) || '0,00'}
+                                    </p>
+                                    <button
+                                        onClick={() => handleDelete(presente.id)}
+                                        className="btn btn-danger p-2"
+                                    >
+                                        <Trash2 size={18} />
+                                    </button>
                                 </div>
                             </div>
                         ))}
                     </div>
                 )}
             </div>
+
+            {/* Modal Novo Presente */}
+            {showForm && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-8">
+                        <h3 className="text-2xl font-serif font-semibold text-gray-900 mb-6">
+                            Novo Presente
+                        </h3>
+
+                        <form onSubmit={handleSubmit} className="space-y-5">
+                            <div>
+                                <label className="label">Categoria</label>
+                                <input
+                                    type="text"
+                                    value={formData.id_categoria}
+                                    onChange={(e) =>
+                                        setFormData({ ...formData, id_categoria: e.target.value })
+                                    }
+                                    className="input-field"
+                                    placeholder="Ex: Eletrônicos"
+                                    required
+                                />
+                            </div>
+
+                            <div>
+                                <label className="label">Nome do Presente</label>
+                                <input
+                                    type="text"
+                                    value={formData.titulo}
+                                    onChange={(e) =>
+                                        setFormData({ ...formData, titulo: e.target.value })
+                                    }
+                                    className="input-field"
+                                    required
+                                />
+                            </div>
+
+                            <div>
+                                <label className="label">Descrição (Opcional)</label>
+                                <textarea
+                                    value={formData.descricao}
+                                    onChange={(e) =>
+                                        setFormData({
+                                            ...formData,
+                                            descricao: e.target.value,
+                                        })
+                                    }
+                                    className="input-field"
+                                    rows={3}
+                                />
+                            </div>
+
+                            <div>
+                                <label className="label">Preço</label>
+                                <input
+                                    type="number"
+                                    step="0.01"
+                                    value={formData.valor_estimado}
+                                    onChange={(e) =>
+                                        setFormData({ ...formData, valor_estimado: e.target.value })
+                                    }
+                                    className="input-field"
+                                    required
+                                />
+                            </div>
+
+                            <div className="flex gap-3 pt-4">
+                                <button
+                                    type="button"
+                                    onClick={() => setShowForm(false)}
+                                    className="btn btn-secondary flex-1"
+                                >
+                                    Cancelar
+                                </button>
+                                <button type="submit" className="btn btn-primary flex-1">
+                                    Adicionar
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
