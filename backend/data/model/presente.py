@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from typing import Optional
 
 @dataclass
 class Presente:
@@ -9,3 +10,5 @@ class Presente:
     descricao: str
     valor_estimado: float
     status: str
+    foto_url: Optional[str] = None
+    link_produto: Optional[str] = None

@@ -26,7 +26,8 @@ export const ConfirmarPresencaPage: React.FC = () => {
     const carregarDados = async () => {
         try {
             setLoading(true);
-            const casalData = await casalAPI.buscarPublico(parseInt(casalId!));
+            const templateData = await templateAPI.buscarPublicoPorSlug(casalId!);
+            const casalData = await casalAPI.buscarPublico(templateData.id_casal);
             setCasal(casalData);
         } catch (err: any) {
             setError('Erro ao carregar dados do casamento');

@@ -11,10 +11,10 @@ services:
       MYSQL_CHARSET: utf8mb4
       MYSQL_COLLATION: utf8mb4_unicode_ci
     volumes:
-      - voucasar-mysql-data:/var/lib/mysql
+      - mysql_data:/var/lib/mysql
       - ./backups:/backups
     ports:
-      - "127.0.0.1:3306:3306" # Apenas localhost
+      - "127.0.0.1:3306:3306" # Apenas localhost para segurança
     networks:
       - voucasar-network
     command: --default-authentication-plugin=mysql_native_password
@@ -43,16 +43,16 @@ services:
     restart: unless-stopped
     command: uvicorn main:app --host 0.0.0.0 --port 8000
 
-  # Frontend Next.js
+  # Frontend Vite servido via Nginx (Produção)
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
     container_name: voucasar-frontend
     environment:
-      NEXT_PUBLIC_API_URL: https://www.voucasar.cauamarvila.com.br/
+      VITE_API_URL: http://localhost:8000
     ports:
-      - "3000:3000"
+      - "5173:80" # Mapeia a porta 5173 pública para a porta 80 interna do Nginx
     depends_on:
       - backend
     networks:
@@ -62,7 +62,6 @@ services:
 volumes:
   mysql_data:
 
-
 networks:
-  integracar-network:
+  voucasar-network:
     driver: bridge

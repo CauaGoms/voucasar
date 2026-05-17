@@ -100,3 +100,60 @@ async def deletar_template(casal_id: int, request: Request, usuario_logado: dict
     except Exception as e:
         logger.error(f"Erro ao deletar template: {e}")
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+
+@router.get("/publico/slug/{slug}")
+async def buscar_template_por_slug(slug: str):
+    """Busca o template de um casal pelo slug dos nomes dos noivos"""
+    try:
+        import unicodedata
+        import re
+
+        def slugify(text: str) -> str:
+            if not text:
+                return ""
+            text = unicodedata.normalize('NFKD', text).encode('ascii', 'ignore').decode('utf-8')
+            text = text.lower()
+            text = re.sub(r'[^a-z0-9\-]', '-', text)
+            text = re.sub(r'-+', '-', text)
+            return text.strip('-')
+
+        target_slug = slugify(slug)
+        templates = template_repo.listar_todos()
+        
+        for t in templates:
+            if t.nomes_noivos and slugify(t.nomes_noivos) == target_slug:
+                return JSONResponse({
+                    "id": t.id,
+                    "id_casal": t.id_casal,
+                    "foto_casal_vertical": t.foto_casal_vertical,
+                    "foto_casal_horizontal": t.foto_casal_horizontal,
+                    "texto_casal": t.texto_casal,
+                    "nomes_noivos": t.nomes_noivos,
+                    "local_cerimonia": t.local_cerimonia,
+                    "local_recepcao": t.local_recepcao
+                })
+
+        # Se não achar por slug literal, tenta buscar como se o slug fosse o próprio id_casal
+        try:
+            casal_id = int(slug)
+            t = template_repo.buscar_por_casal(casal_id)
+            if t:
+                return JSONResponse({
+                    "id": t.id,
+                    "id_casal": t.id_casal,
+                    "foto_casal_vertical": t.foto_casal_vertical,
+                    "foto_casal_horizontal": t.foto_casal_horizontal,
+                    "texto_casal": t.texto_casal,
+                    "nomes_noivos": t.nomes_noivos,
+                    "local_cerimonia": t.local_cerimonia,
+                    "local_recepcao": t.local_recepcao
+                })
+        except ValueError:
+            pass
+
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Casamento não encontrado")
+    except Exception as e:
+        logger.error(f"Erro ao buscar template por slug: {e}")
+        if isinstance(e, HTTPException):
+            raise e
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))

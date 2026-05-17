@@ -107,6 +107,7 @@ async def buscar_casal_publico(casal_id: int):
         return JSONResponse({
             "id": casal.id,
             "data_casamento": str(casal.data_casamento),
+            "chave_pix": casal.chave_pix,
         })
     except Exception as e:
         logger.error(f"Erro ao buscar casal público: {e}")

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { presenteAPI, Presente, casalAPI, Casal } from '../lib/services';
-import { Plus, Trash2, AlertCircle, Loader, Heart, ChevronLeft, Check, Search } from 'lucide-react';
+import { Plus, Trash2, AlertCircle, Loader, Heart, ChevronLeft, Check, Search, Edit2, Link, Gift, Image } from 'lucide-react';
 
 export const PresentsPage: React.FC = () => {
     const { casalId } = useParams<{ casalId: string }>();
@@ -11,6 +11,7 @@ export const PresentsPage: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [showForm, setShowForm] = useState(false);
+    const [editingPresente, setEditingPresente] = useState<Presente | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [filtroStatus, setFiltroStatus] = useState('todos');
 
@@ -19,6 +20,8 @@ export const PresentsPage: React.FC = () => {
         descricao: '',
         valor_estimado: '',
         id_categoria: '',
+        foto_url: '',
+        link_produto: '',
     });
 
     useEffect(() => {
@@ -47,25 +50,46 @@ export const PresentsPage: React.FC = () => {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
-            const novo = await presenteAPI.criar({
-                id: 0,
-                id_casal: parseInt(casalId!),
-                id_categoria: formData.id_categoria,
-                titulo: formData.titulo,
-                descricao: formData.descricao,
-                valor_estimado: parseFloat(formData.valor_estimado),
-                status: 'disponivel',
-            } as Presente);
-            setPresentes([...presentes, novo]);
+            if (editingPresente) {
+                const data = {
+                    ...editingPresente,
+                    id_categoria: formData.id_categoria,
+                    titulo: formData.titulo,
+                    descricao: formData.descricao,
+                    valor_estimado: parseFloat(formData.valor_estimado),
+                    foto_url: formData.foto_url,
+                    link_produto: formData.link_produto,
+                };
+                await presenteAPI.atualizar(editingPresente.id, data);
+                setPresentes(
+                    presentes.map((p) => (p.id === editingPresente.id ? { ...p, ...data } : p))
+                );
+            } else {
+                const novo = await presenteAPI.criar({
+                    id: 0,
+                    id_casal: parseInt(casalId!),
+                    id_categoria: formData.id_categoria,
+                    titulo: formData.titulo,
+                    descricao: formData.descricao,
+                    valor_estimado: parseFloat(formData.valor_estimado),
+                    status: 'disponivel',
+                    foto_url: formData.foto_url,
+                    link_produto: formData.link_produto,
+                } as Presente);
+                setPresentes([...presentes, { ...novo, foto_url: formData.foto_url, link_produto: formData.link_produto }]);
+            }
             setFormData({
                 titulo: '',
                 descricao: '',
                 valor_estimado: '',
                 id_categoria: '',
+                foto_url: '',
+                link_produto: '',
             });
+            setEditingPresente(null);
             setShowForm(false);
         } catch (err: any) {
-            setError('Erro ao criar presente');
+            setError(editingPresente ? 'Erro ao atualizar presente' : 'Erro ao criar presente');
             console.error(err);
         }
     };
@@ -86,7 +110,7 @@ export const PresentsPage: React.FC = () => {
         try {
             const presente = presentes.find((p) => p.id === id);
             if (presente) {
-                await presenteAPI.atualizar({
+                await presenteAPI.atualizar(id, {
                     ...presente,
                     status: comprado ? 'disponivel' : 'comprado',
                 } as Presente);
@@ -144,7 +168,18 @@ export const PresentsPage: React.FC = () => {
                         <p className="text-gray-600 mt-1">Casal #{casalId}</p>
                     </div>
                     <button
-                        onClick={() => setShowForm(true)}
+                        onClick={() => {
+                            setEditingPresente(null);
+                            setFormData({
+                                titulo: '',
+                                descricao: '',
+                                valor_estimado: '',
+                                id_categoria: '',
+                                foto_url: '',
+                                link_produto: '',
+                            });
+                            setShowForm(true);
+                        }}
                         className="btn btn-primary flex gap-2 items-center"
                     >
                         <Plus size={20} />
@@ -212,7 +247,18 @@ export const PresentsPage: React.FC = () => {
                         <Heart className="h-12 w-12 text-gray-300 mx-auto mb-4" />
                         <p className="text-gray-600 mb-4">Nenhum presente encontrado</p>
                         <button
-                            onClick={() => setShowForm(true)}
+                            onClick={() => {
+                                setEditingPresente(null);
+                                setFormData({
+                                    titulo: '',
+                                    descricao: '',
+                                    valor_estimado: '',
+                                    id_categoria: '',
+                                    foto_url: '',
+                                    link_produto: '',
+                                });
+                                setShowForm(true);
+                            }}
                             className="btn btn-primary"
                         >
                             Adicionar Presente
@@ -223,7 +269,7 @@ export const PresentsPage: React.FC = () => {
                         {presentesFiltrados.map((presente) => (
                             <div
                                 key={presente.id}
-                                className={`card flex items-center justify-between transition ${presente.status === 'comprado' ? 'bg-green-50' : ''
+                                className={`card flex flex-col md:flex-row md:items-center justify-between gap-4 transition ${presente.status === 'comprado' ? 'bg-green-50/50' : ''
                                     }`}
                             >
                                 <div className="flex items-center gap-4 flex-1">
@@ -240,9 +286,26 @@ export const PresentsPage: React.FC = () => {
                                             <Check size={16} className="text-white" />
                                         )}
                                     </button>
-                                    <div className="flex-1">
+                                    
+                                    {/* Exibição da Imagem do Presente */}
+                                    {presente.foto_url ? (
+                                        <img
+                                            src={presente.foto_url}
+                                            alt={presente.titulo}
+                                            className="w-16 h-16 object-cover rounded-lg border border-primary-100 shadow-sm"
+                                            onError={(e) => {
+                                                (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1549465220-1a8b9238cd48?q=80&w=100&auto=format&fit=crop';
+                                            }}
+                                        />
+                                    ) : (
+                                        <div className="flex-shrink-0 w-16 h-16 rounded-lg bg-amber-50 flex items-center justify-center border border-amber-100">
+                                            <Gift className="text-[#a89073]" size={28} />
+                                        </div>
+                                    )}
+
+                                    <div className="flex-1 min-w-0">
                                         <h3
-                                            className={`font-semibold ${presente.status === 'comprado'
+                                            className={`font-serif font-semibold text-lg truncate ${presente.status === 'comprado'
                                                 ? 'text-gray-500 line-through'
                                                 : 'text-gray-900'
                                                 }`}
@@ -250,17 +313,54 @@ export const PresentsPage: React.FC = () => {
                                             {presente.titulo}
                                         </h3>
                                         {presente.descricao && (
-                                            <p className="text-sm text-gray-600">{presente.descricao}</p>
+                                            <p className="text-sm text-gray-500 line-clamp-1">{presente.descricao}</p>
                                         )}
+                                        
+                                        {/* Badges de Categoria e Opção de Pagamento */}
+                                        <div className="flex flex-wrap gap-2 mt-2">
+                                            {presente.link_produto ? (
+                                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-100">
+                                                    <Link size={12} /> Compra Direta
+                                                </span>
+                                            ) : (
+                                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-100">
+                                                    💸 Receber via PIX
+                                                </span>
+                                            )}
+                                            {presente.id_categoria && (
+                                                <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600 border border-gray-200">
+                                                    {presente.id_categoria}
+                                                </span>
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
-                                <div className="flex items-center gap-4">
-                                    <p className="text-lg font-semibold text-gray-900 min-w-[100px] text-right">
+                                <div className="flex items-center justify-end gap-3 self-end md:self-center">
+                                    <p className="text-lg font-serif font-semibold text-gray-900 min-w-[100px] text-right">
                                         R$ {presente.valor_estimado?.toFixed(2) || '0,00'}
                                     </p>
                                     <button
+                                        onClick={() => {
+                                            setEditingPresente(presente);
+                                            setFormData({
+                                                titulo: presente.titulo,
+                                                descricao: presente.descricao || '',
+                                                valor_estimado: presente.valor_estimado.toString(),
+                                                id_categoria: presente.id_categoria || '',
+                                                foto_url: presente.foto_url || '',
+                                                link_produto: presente.link_produto || '',
+                                            });
+                                            setShowForm(true);
+                                        }}
+                                        className="btn btn-secondary p-2.5"
+                                        title="Editar Presente"
+                                    >
+                                        <Edit2 size={18} />
+                                    </button>
+                                    <button
                                         onClick={() => handleDelete(presente.id)}
-                                        className="btn btn-danger p-2"
+                                        className="btn btn-danger p-2.5"
+                                        title="Excluir Presente"
                                     >
                                         <Trash2 size={18} />
                                     </button>
@@ -271,12 +371,12 @@ export const PresentsPage: React.FC = () => {
                 )}
             </div>
 
-            {/* Modal Novo Presente */}
+            {/* Modal Novo/Editar Presente */}
             {showForm && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-8">
+                    <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-8 max-h-[90vh] overflow-y-auto">
                         <h3 className="text-2xl font-serif font-semibold text-gray-900 mb-6">
-                            Novo Presente
+                            {editingPresente ? 'Editar Presente' : 'Novo Presente'}
                         </h3>
 
                         <form onSubmit={handleSubmit} className="space-y-5">
@@ -303,6 +403,7 @@ export const PresentsPage: React.FC = () => {
                                         setFormData({ ...formData, titulo: e.target.value })
                                     }
                                     className="input-field"
+                                    placeholder="Ex: Jogo de Panelas"
                                     required
                                 />
                             </div>
@@ -318,12 +419,13 @@ export const PresentsPage: React.FC = () => {
                                         })
                                     }
                                     className="input-field"
-                                    rows={3}
+                                    rows={2}
+                                    placeholder="Ex: Cor vermelha, 5 peças"
                                 />
                             </div>
 
                             <div>
-                                <label className="label">Preço</label>
+                                <label className="label">Preço Estimado</label>
                                 <input
                                     type="number"
                                     step="0.01"
@@ -332,8 +434,49 @@ export const PresentsPage: React.FC = () => {
                                         setFormData({ ...formData, valor_estimado: e.target.value })
                                     }
                                     className="input-field"
+                                    placeholder="0.00"
                                     required
                                 />
+                            </div>
+
+                            <div>
+                                <label className="label">URL da Foto do Presente (Opcional)</label>
+                                <input
+                                    type="url"
+                                    value={formData.foto_url}
+                                    onChange={(e) =>
+                                        setFormData({ ...formData, foto_url: e.target.value })
+                                    }
+                                    className="input-field"
+                                    placeholder="https://exemplo.com/imagem.jpg"
+                                />
+                                {formData.foto_url && (
+                                    <div className="mt-2 flex items-center gap-3 bg-gray-50 p-2 rounded-lg border">
+                                        <img 
+                                            src={formData.foto_url} 
+                                            alt="Preview" 
+                                            className="w-12 h-12 object-cover rounded border" 
+                                            onError={(e) => { (e.target as HTMLElement).style.display = 'none'; }} 
+                                        />
+                                        <span className="text-xs text-gray-500">Visualização da Imagem</span>
+                                    </div>
+                                )}
+                            </div>
+
+                            <div>
+                                <label className="label">Link de Compra do Produto (Opcional)</label>
+                                <input
+                                    type="url"
+                                    value={formData.link_produto}
+                                    onChange={(e) =>
+                                        setFormData({ ...formData, link_produto: e.target.value })
+                                    }
+                                    className="input-field"
+                                    placeholder="https://amazon.com.br/produto..."
+                                />
+                                <p className="text-[11px] text-gray-500 mt-1">
+                                    Se preenchido, os convidados comprarão diretamente na loja em vez de fazer um PIX.
+                                </p>
                             </div>
 
                             <div className="flex gap-3 pt-4">
@@ -345,7 +488,7 @@ export const PresentsPage: React.FC = () => {
                                     Cancelar
                                 </button>
                                 <button type="submit" className="btn btn-primary flex-1">
-                                    Adicionar
+                                    {editingPresente ? 'Salvar' : 'Adicionar'}
                                 </button>
                             </div>
                         </form>

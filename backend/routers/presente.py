@@ -21,7 +21,9 @@ async def criar_presente(request: Request, usuario_logado: dict = None):
             titulo=presente_data.get("titulo"),
             descricao=presente_data.get("descricao"),
             valor_estimado=presente_data.get("valor_estimado"),
-            status=presente_data.get("status", "disponivel")
+            status=presente_data.get("status", "disponivel"),
+            foto_url=presente_data.get("foto_url"),
+            link_produto=presente_data.get("link_produto")
         )
         cod_presente = presente_repo.inserir(presente)
         return JSONResponse({
@@ -32,6 +34,8 @@ async def criar_presente(request: Request, usuario_logado: dict = None):
             "descricao": presente.descricao,
             "valor_estimado": float(presente.valor_estimado) if presente.valor_estimado is not None else None,
             "status": presente.status,
+            "foto_url": presente.foto_url,
+            "link_produto": presente.link_produto,
             "mensagem": "Presente criado com sucesso"
         }, status_code=status.HTTP_201_CREATED)
     except Exception as e:
@@ -53,7 +57,9 @@ async def buscar_presente_endpoint(presente_id: int, request: Request, usuario_l
             "titulo": presente.titulo,
             "descricao": presente.descricao,
             "valor_estimado": float(presente.valor_estimado) if presente.valor_estimado is not None else None,
-            "status": presente.status
+            "status": presente.status,
+            "foto_url": presente.foto_url,
+            "link_produto": presente.link_produto
         })
     except Exception as e:
         logger.error(f"Erro ao buscar presente: {e}")
@@ -75,6 +81,11 @@ async def atualizar_presente_endpoint(presente_id: int, request: Request, usuari
         presente.valor_estimado = presente_data.get("valor_estimado", presente.valor_estimado)
         presente.status = presente_data.get("status", presente.status)
         
+        if "foto_url" in presente_data:
+            presente.foto_url = presente_data["foto_url"]
+        if "link_produto" in presente_data:
+            presente.link_produto = presente_data["link_produto"]
+        
         presente_repo.atualizar(presente)
         return JSONResponse({
             "id": presente.id,
@@ -84,6 +95,8 @@ async def atualizar_presente_endpoint(presente_id: int, request: Request, usuari
             "descricao": presente.descricao,
             "valor_estimado": float(presente.valor_estimado) if presente.valor_estimado is not None else None,
             "status": presente.status,
+            "foto_url": presente.foto_url,
+            "link_produto": presente.link_produto,
             "mensagem": "Presente atualizado com sucesso"
         })
     except Exception as e:
@@ -115,7 +128,9 @@ async def listar_presentes_por_casal_endpoint(casal_id: int, request: Request, u
                 "titulo": p.titulo,
                 "descricao": p.descricao,
                 "valor_estimado": float(p.valor_estimado) if p.valor_estimado is not None else None,
-                "status": p.status
+                "status": p.status,
+                "foto_url": p.foto_url,
+                "link_produto": p.link_produto
             } for p in presentes
         ])
     except Exception as e:

@@ -33,7 +33,14 @@ export const LoginPage: React.FC = () => {
     };
 
     return (
-        <div className="min-h-screen flex bg-transparent">
+        <div className="min-h-screen flex bg-transparent relative overflow-hidden">
+            {/* Imagem de fundo desfocada para celular/tablet */}
+            <div 
+                className="absolute inset-0 lg:hidden bg-cover bg-center filter blur-[6px] opacity-15 scale-105"
+                style={{ backgroundImage: "url('/noivos.jpg')" }}
+            ></div>
+            <div className="absolute inset-0 lg:hidden bg-gradient-to-b from-amber-50/50 via-transparent to-amber-50/50"></div>
+
             {/* Lado Esquerdo - Foto */}
             <div
                 className="hidden lg:flex lg:w-1/2 bg-cover bg-center relative"
@@ -43,10 +50,10 @@ export const LoginPage: React.FC = () => {
             </div>
 
             {/* Lado Direito - Formulário */}
-            <div className="w-full lg:w-1/2 flex flex-col items-center justify-center p-6 sm:p-12">
-                <div className="w-full max-w-sm">
+            <div className="w-full lg:w-1/2 flex flex-col items-center justify-center p-6 sm:p-12 relative z-10">
+                <div className="w-full max-w-sm bg-white/60 md:bg-white/40 backdrop-blur-md p-8 rounded-2xl border border-primary-200/30 shadow-xl lg:shadow-none lg:border-none lg:bg-transparent lg:p-0">
                     <div className="text-center mb-10">
-                        <h1 className="text-8xl font-brand-logo font-normal text-primary-800 mb-3">VouCasar</h1>
+                        <h1 className="text-6xl md:text-8xl font-brand-logo font-normal text-primary-800 mb-3">VouCasar</h1>
                         <p className="text-gray-600 text-base font-light">Organize sua lista de casamento</p>
                     </div>                    {error && (
                         <div className="alert alert-error mb-6">

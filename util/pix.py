@@ -11,17 +11,24 @@ def remove_accents(input_str):
     return u"".join([c for c in nfkd_form if not unicodedata.combining(c)])
 
 def calculate_crc16(payload):
+    """
+    Calcula o CRC16 CCITT (polinômio 0x1021, valor inicial 0xFFFF)
+    Garante o retorno correto de 4 caracteres hexadecimais em maiúsculo.
+    """
     polynomial = 0x1021
     crc = 0xFFFF
+    
     for byte in payload.encode('utf-8'):
         crc ^= (byte << 8)
         for _ in range(8):
-            if (crc & 0x8000):
+            if crc & 0x8000:
                 crc = (crc << 1) ^ polynomial
             else:
-                crc = (crc << 1)
-            crc &= 0xFFFF
-    return hex(crc)[2:].upper().zfill(4)
+                crc = crc << 1
+            crc &= 0xFFFF # Mantém estritamente em 16 bits
+            
+    # Correção do bug: formata diretamente para hex com 4 dígitos preenchidos com zero
+    return f"{crc:04X}"
 
 def gerar_payload_pix(chave_pix, valor, nome_recebedor, cidade_recebedor, txid="***"):
     # Sanitize inputs (no accents, uppercase)
@@ -45,7 +52,9 @@ def gerar_payload_pix(chave_pix, valor, nome_recebedor, cidade_recebedor, txid="
     # 54 - Transaction Amount
     transaction_amount = ""
     if valor:
-        transaction_amount = format_pix_value("54", f"{float(valor):.2f}")
+        # Força string com duas casas decimais usando ponto como separador
+        str_valor = f"{float(valor):.2f}"
+        transaction_amount = format_pix_value("54", str_valor)
     
     # 58 - Country Code (BR)
     country_code = format_pix_value("58", "BR")

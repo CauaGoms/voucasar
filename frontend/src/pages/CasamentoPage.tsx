@@ -24,10 +24,8 @@ export const CasamentoPage: React.FC = () => {
     const carregarTemplate = async () => {
         try {
             setLoading(true);
-            const [templateData, casalData] = await Promise.all([
-                templateAPI.buscarPublico(parseInt(casalId!)),
-                casalAPI.buscarPublico(parseInt(casalId!)),
-            ]);
+            const templateData = await templateAPI.buscarPublicoPorSlug(casalId!);
+            const casalData = await casalAPI.buscarPublico(templateData.id_casal);
             setTemplate(templateData);
             setCasal(casalData);
         } catch (err: any) {
@@ -132,7 +130,7 @@ export const CasamentoPage: React.FC = () => {
                 <section className="py-16 bg-transparent relative z-10 -mt-24">
                     <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
                         <div className="bg-[#fdfbf7] rounded-[2rem] shadow-xl p-10 md:p-16 border border-[#f4e9d8] text-center">
-                            
+
                             {/* Contagem Regressiva Title */}
                             <p className="font-caps text-xs md:text-sm tracking-[0.3em] text-[#a89073] mb-8 uppercase">
                                 Contagem Regressiva
@@ -164,13 +162,13 @@ export const CasamentoPage: React.FC = () => {
                             <p className="font-caps text-[10px] md:text-xs tracking-[0.3em] text-[#a89073] mb-4 uppercase">
                                 Save The Date
                             </p>
-                            
+
                             <p className="text-sm md:text-lg font-caps tracking-[0.2em] text-[#d6aa65] mb-8 uppercase font-medium">
                                 {new Date(casal.data_casamento).toLocaleDateString('pt-BR', {
                                     day: '2-digit',
                                     month: 'long',
                                     year: 'numeric'
-                                }).replace(' de ', ' de ').replace(' de ', ' de ')} 
+                                }).replace(' de ', ' de ').replace(' de ', ' de ')}
                                 {/* Simulando a hora já que não há no modelo atual, mas para manter o design */}
                             </p>
 
@@ -247,7 +245,7 @@ export const CasamentoPage: React.FC = () => {
                         </h2>
                         <div className="prose prose-lg max-w-none">
                             {template.texto_casal.split('\n').map((paragrafo, index) => (
-                                <p key={index} className="text-gray-700 text-lg leading-relaxed mb-4">
+                                <p key={index} className="text-gray-700 text-lg leading-relaxed text-justify mb-4">
                                     {paragrafo}
                                 </p>
                             ))}

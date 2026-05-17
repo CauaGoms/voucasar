@@ -113,3 +113,27 @@ def deletar(id_casal: int) -> bool:
     except Exception as e:
         print(f"Erro ao deletar template: {e}")
         return False
+
+def listar_todos() -> list[Template]:
+    try:
+        with get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute(LISTAR_TODOS)
+            resultados = cursor.fetchall()
+            cursor.close()
+            retorno = []
+            for r in resultados:
+                retorno.append(Template(
+                    id=r[0],
+                    id_casal=r[1],
+                    foto_casal_vertical=r[2],
+                    foto_casal_horizontal=r[3],
+                    texto_casal=r[4],
+                    nomes_noivos=r[5],
+                    local_cerimonia=r[6],
+                    local_recepcao=r[7]
+                ))
+            return retorno
+    except Exception as e:
+        print(f"Erro ao listar todos os templates: {e}")
+        return []

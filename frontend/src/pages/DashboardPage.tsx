@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { casalAPI, Casal } from '../lib/services';
+import { casalAPI, Casal, templateAPI } from '../lib/services';
 import { Heart, Plus, AlertCircle, Loader, Edit2, Trash2, Users, Eye, Share2, Copy, CheckCircle2, CreditCard } from 'lucide-react';
 
 export const DashboardPage: React.FC = () => {
@@ -20,9 +20,17 @@ export const DashboardPage: React.FC = () => {
     });
     const [copiedId, setCopiedId] = useState<number | null>(null);
     const [countdown, setCountdown] = useState({ dias: 0, horas: 0, minutos: 0, segundos: 0 });
+    const [template, setTemplate] = useState<any>(null);
 
     const handleCopyLink = (id: number) => {
-        const url = `${window.location.origin}/casamento/${id}`;
+        const slug = template?.nomes_noivos ? template.nomes_noivos
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .toLowerCase()
+            .replace(/[^a-z0-9\-]/g, '-')
+            .replace(/-+/g, '-')
+            .replace(/^-+|-+$/g, '') : String(id);
+        const url = `${window.location.origin}/casamento/${slug}`;
         navigator.clipboard.writeText(url);
         setCopiedId(id);
         setTimeout(() => setCopiedId(null), 2000);
@@ -63,6 +71,14 @@ export const DashboardPage: React.FC = () => {
             setLoading(true);
             const dados = await casalAPI.listar();
             setCasais(dados);
+            if (dados && dados.length > 0) {
+                try {
+                    const temp = await templateAPI.buscar(dados[0].id);
+                    setTemplate(temp);
+                } catch (err) {
+                    console.log('Nenhum template criado ainda:', err);
+                }
+            }
         } catch (err: any) {
             setError('Erro ao carregar casais');
             console.error(err);
@@ -125,14 +141,35 @@ export const DashboardPage: React.FC = () => {
         <div className="min-h-screen bg-transparent">
             {/* Main Content */}
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-                <div className="flex justify-between items-center mb-12">
-                    <div>
-                        <h2 className="text-sm font-caps tracking-[0.3em] text-[#a89073] uppercase mb-1">
-                            Bem-vindo de volta,
-                        </h2>
-                        <h1 className="text-4xl font-serif font-semibold text-gray-900">
-                            {usuario?.nome || 'Usuário'}
-                        </h1>
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12 bg-white/40 backdrop-blur-sm p-6 rounded-2xl border border-primary-100 shadow-sm animate-fade-in">
+                    <div className="flex items-center gap-5">
+                        {template && (template.foto_casal_horizontal || template.foto_casal_vertical) ? (
+                            <img
+                                src={template.foto_casal_horizontal || template.foto_casal_vertical}
+                                alt="Foto do Casal"
+                                className="w-20 h-20 md:w-24 md:h-24 object-cover rounded-full border-2 border-primary-200 shadow-md flex-shrink-0"
+                                onError={(e) => {
+                                    (e.target as HTMLElement).style.display = 'none';
+                                }}
+                            />
+                        ) : (
+                            <div className="w-20 h-20 md:w-24 md:h-24 rounded-full bg-amber-50 border border-amber-100 flex items-center justify-center flex-shrink-0 shadow-sm">
+                                <Heart className="text-[#a89073] animate-pulse" size={32} />
+                            </div>
+                        )}
+                        <div>
+                            <h2 className="text-xs font-caps tracking-[0.3em] text-[#a89073] uppercase mb-1">
+                                Painel do Casal
+                            </h2>
+                            <h1 className="text-3xl md:text-4xl font-serif font-semibold text-gray-900 leading-tight">
+                                {template?.nomes_noivos || usuario?.nome || 'Usuário'}
+                              </h1>
+                              {casais[0] && (
+                                  <p className="text-xs text-gray-500 font-medium mt-1">
+                                      Casamento em: {new Date(casais[0].data_casamento).toLocaleDateString('pt-BR')}
+                                  </p>
+                              )}
+                        </div>
                     </div>
                 </div>
                 {error && (
@@ -149,7 +186,7 @@ export const DashboardPage: React.FC = () => {
                         <h3 className="text-sm font-caps tracking-[0.2em] text-[#a89073] uppercase mb-8 mt-2">
                             Falta Para o Grande Dia
                         </h3>
-                        
+
                         <div className="flex justify-center gap-4 md:gap-8">
                             {[
                                 { label: 'Dias', value: countdown.dias },
@@ -298,7 +335,16 @@ export const DashboardPage: React.FC = () => {
                                     {copiedId === casais[0].id ? <CheckCircle2 size={18} className="text-green-600" /> : <Share2 size={18} />}
                                 </button>
                                 <button
-                                    onClick={() => window.open(`/casamento/${casais[0].id}`, '_blank')}
+                                    onClick={() => {
+                                        const slug = template?.nomes_noivos ? template.nomes_noivos
+                                            .normalize('NFD')
+                                            .replace(/[\u0300-\u036f]/g, '')
+                                            .toLowerCase()
+                                            .replace(/[^a-z0-9\-]/g, '-')
+                                            .replace(/-+/g, '-')
+                                            .replace(/^-+|-+$/g, '') : String(casais[0].id);
+                                        window.open(`/casamento/${slug}`, '_blank');
+                                    }}
                                     className="btn btn-secondary p-3"
                                     title="Visualizar Página Pública"
                                 >
@@ -309,8 +355,6 @@ export const DashboardPage: React.FC = () => {
                         </div>
                     </div>
                 )}
-            </div>
-
             </div>
 
             {/* Modal Alterar PIX */}

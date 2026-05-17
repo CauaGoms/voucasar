@@ -8,6 +8,17 @@ def criar_tabela() -> bool:
         with get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute(CRIAR_TABELA)
+            
+            # Adiciona colunas novas caso não existam no banco existente
+            try:
+                cursor.execute("ALTER TABLE Presente ADD COLUMN foto_url TEXT")
+            except Exception:
+                pass
+            try:
+                cursor.execute("ALTER TABLE Presente ADD COLUMN link_produto TEXT")
+            except Exception:
+                pass
+                
             conn.commit()
             cursor.close()
             return True
@@ -23,7 +34,9 @@ def inserir(presente: Presente, cursor=None) -> Optional[int]:
             presente.titulo,
             presente.descricao,
             presente.valor_estimado,
-            presente.status
+            presente.status,
+            presente.foto_url,
+            presente.link_produto
         ))
         return cursor.lastrowid
     else:
@@ -35,7 +48,9 @@ def inserir(presente: Presente, cursor=None) -> Optional[int]:
                 presente.titulo,
                 presente.descricao,
                 presente.valor_estimado,
-                presente.status
+                presente.status,
+                presente.foto_url,
+                presente.link_produto
             ))
             cod_presente = cursor.lastrowid
             conn.commit()
@@ -46,6 +61,9 @@ def deletar(cod_presente: int) -> bool:
     try:
         with get_connection() as conn:
             cursor = conn.cursor()
+            # Deleta registros dependentes para evitar erro de chave estrangeira
+            cursor.execute("DELETE FROM TransacaoPresente WHERE id_presente = %s", (cod_presente,))
+            cursor.execute("DELETE FROM FonteCompra WHERE id_presente = %s", (cod_presente,))
             cursor.execute(DELETAR, (cod_presente,))
             conn.commit()
             cursor.close()
@@ -65,6 +83,8 @@ def atualizar(presente: Presente) -> bool:
                 presente.descricao,
                 presente.valor_estimado,
                 presente.status,
+                presente.foto_url,
+                presente.link_produto,
                 presente.id
             ))
             conn.commit()
@@ -89,7 +109,9 @@ def buscar_por_id(cod_presente: int) -> Optional[Presente]:
                     titulo=resultado[3],
                     descricao=resultado[4],
                     valor_estimado=resultado[5],
-                    status=resultado[6]
+                    status=resultado[6],
+                    foto_url=resultado[7] if len(resultado) > 7 else None,
+                    link_produto=resultado[8] if len(resultado) > 8 else None
                 )
             return None
     except Exception as e:
@@ -112,7 +134,9 @@ def listar_por_casal(cod_casal: int) -> List[Presente]:
                     titulo=resultado[3],
                     descricao=resultado[4],
                     valor_estimado=resultado[5],
-                    status=resultado[6]
+                    status=resultado[6],
+                    foto_url=resultado[7] if len(resultado) > 7 else None,
+                    link_produto=resultado[8] if len(resultado) > 8 else None
                 ))
             return presentes
     except Exception as e:
@@ -135,7 +159,9 @@ def listar_todos() -> List[Presente]:
                     titulo=resultado[3],
                     descricao=resultado[4],
                     valor_estimado=resultado[5],
-                    status=resultado[6]
+                    status=resultado[6],
+                    foto_url=resultado[7] if len(resultado) > 7 else None,
+                    link_produto=resultado[8] if len(resultado) > 8 else None
                 ))
             return presentes
     except Exception as e:

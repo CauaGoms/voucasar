@@ -188,6 +188,11 @@ async def criar_transacao_publico(request: Request, transacao_data: dict = Body(
         
         from backend.data.repo import presente as presente_repo
         presente = presente_repo.buscar_por_id(id_presente)
+        
+        if presente:
+            presente.status = "comprado"
+            presente_repo.atualizar(presente)
+            
         valor_estimado = presente.valor_estimado if presente else 0
         
         payload_pix = ""
@@ -219,4 +224,47 @@ async def criar_transacao_publico(request: Request, transacao_data: dict = Body(
         
     except Exception as e:
         logger.error(f"Erro ao criar transação pública: {e}")
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+
+@router.post("/publico/cota-livre")
+async def criar_cota_livre_publico(request: Request, data: dict = Body(...)):
+    """Gera um PIX com valor customizado para Cota Livre"""
+    try:
+        from backend.data.repo import casal as casal_repo
+        from util.pix import gerar_payload_pix, gerar_qr_code_base64
+        
+        id_casal = data.get("id_casal")
+        valor = data.get("valor")
+        nome = data.get("nome_convidado")
+        email = data.get("email_convidado")
+        
+        if not id_casal or not valor:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Dados incompletos")
+            
+        casal = casal_repo.buscar_por_id(id_casal)
+        if not casal or not casal.chave_pix:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Casal ou chave PIX não encontrado")
+            
+        # Gera txid dinâmico
+        import random
+        r_num = random.randint(1000, 9999)
+        txid = f"COTA{r_num}"
+        
+        payload_pix = gerar_payload_pix(
+            chave_pix=casal.chave_pix,
+            valor=float(valor),
+            nome_recebedor="Casamento",
+            cidade_recebedor="Brasil",
+            txid=txid
+        )
+        qr_code_base64 = gerar_qr_code_base64(payload_pix)
+        
+        return JSONResponse({
+            "chave_pix": casal.chave_pix,
+            "payload_pix": payload_pix,
+            "qr_code_base64": qr_code_base64,
+            "valor": float(valor)
+        })
+    except Exception as e:
+        logger.error(f"Erro ao gerar cota livre PIX: {e}")
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))

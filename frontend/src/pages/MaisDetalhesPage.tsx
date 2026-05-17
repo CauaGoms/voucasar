@@ -18,10 +18,8 @@ export const MaisDetalhesPage: React.FC = () => {
     const carregarDados = async () => {
         try {
             setLoading(true);
-            const [templateData, casalData] = await Promise.all([
-                templateAPI.buscarPublico(parseInt(casalId!)),
-                casalAPI.buscarPublico(parseInt(casalId!)),
-            ]);
+            const templateData = await templateAPI.buscarPublicoPorSlug(casalId!);
+            const casalData = await casalAPI.buscarPublico(templateData.id_casal);
             setTemplate(templateData);
             setCasal(casalData);
         } catch (err: any) {

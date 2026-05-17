@@ -57,3 +57,9 @@ DELETAR = """
 DELETE FROM Template
 WHERE id_casal = %s;
 """
+
+LISTAR_TODOS = """
+SELECT id, id_casal, foto_casal_vertical, foto_casal_horizontal, texto_casal,
+       nomes_noivos, local_cerimonia, local_recepcao
+FROM Template;
+"""
