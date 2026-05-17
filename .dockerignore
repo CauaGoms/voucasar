@@ -1,0 +1,17 @@
+# Ignore VCS and virtual environments
+.git
+.gitignore
+.venv
+venv/
+env/
+__pycache__/
+*.py[cod]
+
+# Ignore backend logs and backups
+logs/
+backups/
+
+# Ignore frontend build files and modules
+frontend/node_modules/
+frontend/dist/
+frontend/build/
