@@ -105,18 +105,18 @@ export const ListaPresentes: React.FC = () => {
     return (
         <div className="min-h-screen">
             {/* Main Content */}
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-                <div className="flex items-center gap-4 mb-12">
-                    <button
-                        onClick={() => navigate(`/casamento/${casalId}`)}
-                        className="btn btn-ghost p-2"
-                    >
-                        <ChevronLeft size={24} />
-                    </button>
-                    <div className="flex-1">
-                        <h1 className="text-4xl font-serif font-semibold text-gray-900">Lista de Presentes</h1>
-                        <p className="text-gray-600 mt-1">Veja os presentes e contribua</p>
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-16">
+                <div className="flex flex-col md:flex-row md:items-center gap-4 mb-8 md:mb-12">
+                    <div className="flex items-center gap-4">
+                        <button
+                            onClick={() => navigate(`/casamento/${casalId}`)}
+                            className="btn btn-ghost p-2"
+                        >
+                            <ChevronLeft size={24} />
+                        </button>
+                        <h1 className="text-3xl md:text-4xl font-serif font-semibold text-gray-900">Lista de Presentes</h1>
                     </div>
+                    <p className="text-gray-600 md:mt-1 md:ml-12">Veja os presentes e contribua</p>
                 </div>
                 {error && (
                     <div className="alert alert-error mb-6">
@@ -196,7 +196,7 @@ export const ListaPresentes: React.FC = () => {
                         {presentesFiltrados.map((presente) => (
                             <div
                                 key={presente.id}
-                                className={`card flex flex-col md:flex-row md:items-center justify-between gap-4 transition ${presente.status === 'comprado' ? 'bg-green-50/50' : ''
+                                className={`card flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition ${presente.status === 'comprado' ? 'bg-green-50/50' : ''
                                     }`}
                             >
                                 <div className="flex items-center gap-4 flex-1">
@@ -219,8 +219,8 @@ export const ListaPresentes: React.FC = () => {
                                     <div className="flex-1 min-w-0">
                                         <h3
                                             className={`font-serif font-semibold text-lg truncate ${presente.status === 'comprado'
-                                                    ? 'text-gray-500 line-through'
-                                                    : 'text-gray-900'
+                                                ? 'text-gray-500 line-through'
+                                                : 'text-gray-900'
                                                 }`}
                                         >
                                             {presente.titulo}
@@ -248,7 +248,7 @@ export const ListaPresentes: React.FC = () => {
                                         </div>
                                     </div>
                                 </div>
-                                <div className="flex items-center justify-between md:justify-end gap-6 self-stretch md:self-auto">
+                                <div className="flex items-center justify-between sm:justify-end gap-6 self-stretch sm:self-auto">
                                     <p className="text-lg font-serif font-semibold text-gray-900 min-w-[100px] text-right">
                                         R$ {presente.valor_estimado?.toFixed(2) || '0,00'}
                                     </p>
@@ -285,7 +285,7 @@ export const ListaPresentes: React.FC = () => {
             {selectedPresente && (
                 <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
                     <div className="bg-primary-50 rounded-2xl shadow-2xl max-w-md w-full p-8 border border-white max-h-[90vh] overflow-y-auto">
-                        
+
                         {/* FLUXO: COTA LIVRE */}
                         {selectedPresente.id === -1 ? (
                             !pixInfo ? (
@@ -500,9 +500,9 @@ export const ListaPresentes: React.FC = () => {
 
                                     {selectedPresente.foto_url && (
                                         <div className="mb-4">
-                                            <img 
-                                                src={selectedPresente.foto_url} 
-                                                alt={selectedPresente.titulo} 
+                                            <img
+                                                src={selectedPresente.foto_url}
+                                                alt={selectedPresente.titulo}
                                                 className="w-24 h-24 object-cover rounded-lg border border-gray-200 mx-auto shadow-sm"
                                                 onError={(e) => { (e.target as HTMLElement).style.display = 'none'; }}
                                             />
@@ -541,7 +541,7 @@ export const ListaPresentes: React.FC = () => {
                                 </div>
                             )
                         ) : (
-                            
+
                             /* FLUXO: PIX PADRÃO */
                             !pixInfo ? (
                                 <>

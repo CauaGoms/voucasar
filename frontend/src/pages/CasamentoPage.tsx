@@ -91,7 +91,7 @@ export const CasamentoPage: React.FC = () => {
         <div className="min-h-screen">
 
             {/* Hero Section */}
-            <section className="relative h-[85vh] md:h-screen overflow-hidden bg-primary-400 flex items-center justify-center">
+            <section className="relative h-[80vh] md:h-screen overflow-hidden bg-primary-400 flex items-center justify-center">
                 {template.foto_casal_vertical && (
                     <>
                         {/* Imagem de Fundo Desfocada para preencher os espaços */}
@@ -104,22 +104,21 @@ export const CasamentoPage: React.FC = () => {
                         <img
                             src={template.foto_casal_vertical}
                             alt="Casal"
-                            className="absolute inset-0 w-full h-full object-contain object-center p-4 md:p-8"
+                            className="absolute inset-0 w-full h-full object-contain object-center p-2 md:p-8"
                         />
                     </>
                 )}
-                <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/30 to-black/70"></div>
+                <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/20 to-black/70"></div>
 
-                <div className="absolute inset-0 flex flex-col items-center justify-center text-center text-white">
-                    <h1 className="text-7xl md:text-9xl font-script-logo font-normal mb-4">
+                <div className="absolute inset-0 flex flex-col items-center justify-center text-center text-white px-4">
+                    <h1 className="text-5xl sm:text-7xl md:text-9xl font-script-logo font-normal mb-4 break-words max-w-full">
                         {template.nomes_noivos}
                     </h1>
-                    <p className="text-xl md:text-2xl font-light">
+                    <p className="text-lg md:text-2xl font-light uppercase tracking-widest">
                         {casal && new Date(casal.data_casamento).toLocaleDateString('pt-BR', {
-                            weekday: 'long',
-                            year: 'numeric',
-                            month: 'long',
                             day: 'numeric',
+                            month: 'long',
+                            year: 'numeric',
                         })}
                     </p>
                 </div>
@@ -127,28 +126,28 @@ export const CasamentoPage: React.FC = () => {
 
             {/* Countdown & Save the Date */}
             {casal?.data_casamento && (
-                <section className="py-16 bg-transparent relative z-10 -mt-24">
-                    <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-                        <div className="bg-[#fdfbf7] rounded-[2rem] shadow-xl p-10 md:p-16 border border-[#f4e9d8] text-center">
+                <section className="py-12 bg-transparent relative z-10 -mt-16 md:-mt-24">
+                    <div className="max-w-3xl mx-auto px-4">
+                        <div className="bg-[#fdfbf7] rounded-[2rem] shadow-xl p-6 md:p-16 border border-[#f4e9d8] text-center">
 
                             {/* Contagem Regressiva Title */}
-                            <p className="font-caps text-xs md:text-sm tracking-[0.3em] text-[#a89073] mb-8 uppercase">
+                            <p className="font-caps text-[10px] md:text-sm tracking-[0.3em] text-[#a89073] mb-6 md:mb-8 uppercase">
                                 Contagem Regressiva
                             </p>
 
                             {/* Countdown Boxes */}
-                            <div className="flex justify-center gap-3 md:gap-6 mb-12">
+                            <div className="flex justify-center gap-2 md:gap-6 mb-8 md:mb-12">
                                 {[
                                     { label: 'Dias', value: countdown.dias },
                                     { label: 'Horas', value: countdown.horas },
                                     { label: 'Min', value: countdown.minutos },
                                     { label: 'Seg', value: countdown.segundos },
                                 ].map((item) => (
-                                    <div key={item.label} className="w-16 md:w-24 aspect-square flex flex-col justify-center items-center border border-[#ecdcb9] rounded-2xl bg-[#fdfbf7]">
-                                        <span className="text-2xl md:text-4xl font-serif text-[#1e293b] leading-none mb-1">
+                                    <div key={item.label} className="flex-1 max-w-[80px] md:w-24 aspect-square flex flex-col justify-center items-center border border-[#ecdcb9] rounded-xl md:rounded-2xl bg-[#fdfbf7]">
+                                        <span className="text-xl md:text-4xl font-serif text-[#1e293b] leading-none mb-1">
                                             {String(item.value).padStart(2, '0')}
                                         </span>
-                                        <span className="text-[9px] md:text-xs font-caps tracking-widest text-[#a89073] uppercase">
+                                        <span className="text-[8px] md:text-xs font-caps tracking-widest text-[#a89073] uppercase">
                                             {item.label}
                                         </span>
                                     </div>
@@ -156,28 +155,27 @@ export const CasamentoPage: React.FC = () => {
                             </div>
 
                             {/* Separator */}
-                            <div className="w-48 h-px bg-[#ecdcb9] mx-auto mb-8"></div>
+                            <div className="w-32 md:w-48 h-px bg-[#ecdcb9] mx-auto mb-6 md:mb-8"></div>
 
                             {/* Save the Date */}
-                            <p className="font-caps text-[10px] md:text-xs tracking-[0.3em] text-[#a89073] mb-4 uppercase">
+                            <p className="font-caps text-[9px] md:text-xs tracking-[0.3em] text-[#a89073] mb-4 uppercase">
                                 Save The Date
                             </p>
 
-                            <p className="text-sm md:text-lg font-caps tracking-[0.2em] text-[#d6aa65] mb-8 uppercase font-medium">
+                            <p className="text-xs md:text-lg font-caps tracking-[0.2em] text-[#d6aa65] mb-6 md:mb-8 uppercase font-medium">
                                 {new Date(casal.data_casamento).toLocaleDateString('pt-BR', {
                                     day: '2-digit',
                                     month: 'long',
                                     year: 'numeric'
-                                }).replace(' de ', ' de ').replace(' de ', ' de ')}
-                                {/* Simulando a hora já que não há no modelo atual, mas para manter o design */}
+                                })}
                             </p>
 
-                            <h2 className="text-6xl md:text-8xl font-script-logo text-[#2d3748] mt-4 mb-8">
+                            <h2 className="text-5xl md:text-8xl font-script-logo text-[#2d3748] mt-4 mb-6 md:mb-8 break-words">
                                 {template.nomes_noivos || "Noivos"}
                             </h2>
 
                             {/* Bottom Line */}
-                            <div className="w-48 h-[2px] bg-[#d6aa65] mx-auto"></div>
+                            <div className="w-32 md:w-48 h-[2px] bg-[#d6aa65] mx-auto"></div>
 
                         </div>
                     </div>
