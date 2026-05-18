@@ -24,13 +24,27 @@ export const CasamentoPage: React.FC = () => {
     const carregarTemplate = async () => {
         try {
             setLoading(true);
-            const templateData = await templateAPI.buscarPublicoPorSlug(casalId!);
+            setError('');
+
+            let templateData;
+            try {
+                // Tenta carregar pelo slug
+                templateData = await templateAPI.buscarPublicoPorSlug(casalId!);
+            } catch (slugErr) {
+                // Se falhar e for número, tenta carregar pelo ID do casal
+                if (!isNaN(Number(casalId))) {
+                    templateData = await templateAPI.buscarPublico(Number(casalId));
+                } else {
+                    throw slugErr;
+                }
+            }
+
             const casalData = await casalAPI.buscarPublico(templateData.id_casal);
             setTemplate(templateData);
             setCasal(casalData);
         } catch (err: any) {
             setError('Casamento não encontrado');
-            console.error(err);
+            console.error('Erro ao carregar template:', err);
         } finally {
             setLoading(false);
         }

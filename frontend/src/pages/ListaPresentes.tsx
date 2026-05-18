@@ -29,20 +29,21 @@ export const ListaPresentes: React.FC = () => {
             setLoading(true);
             setError('');
 
-            let actualId: number;
+            let templateData;
 
-            // Tenta tratar casalId como slug primeiro
+            // Tenta carregar pelo slug primeiro
             try {
-                const templateData = await templateAPI.buscarPublicoPorSlug(casalId!);
-                actualId = templateData.id_casal;
+                templateData = await templateAPI.buscarPublicoPorSlug(casalId!);
             } catch (slugErr) {
-                // Se falhar por slug, assume que é ID numérico
+                // Se falhar e for número, tenta carregar diretamente pelo ID
                 if (!isNaN(Number(casalId))) {
-                    actualId = Number(casalId);
+                    templateData = await templateAPI.buscarPublico(Number(casalId));
                 } else {
-                    throw new Error('Identificador de casal inválido');
+                    throw slugErr;
                 }
             }
+
+            const actualId = templateData.id_casal;
 
             const [presentesData, casalData] = await Promise.all([
                 presenteAPI.listarPorCasal(actualId),
@@ -57,9 +58,7 @@ export const ListaPresentes: React.FC = () => {
         } finally {
             setLoading(false);
         }
-    };
-
-    const handleGiftSubmit = async (e: React.FormEvent) => {
+    }; const handleGiftSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!selectedPresente || !casal) return;
 
