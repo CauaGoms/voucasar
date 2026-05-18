@@ -33,8 +33,8 @@ export const LoginPage: React.FC = () => {
     };
 
     return (
-        <div className="min-h-screen flex bg-gradient-to-br from-[#fdfbf7] via-[#fffaf0] to-[#fdfbf7] relative overflow-hidden">
-            {/* Lado Esquerdo - Foto (Apenas Desktop) */}
+        <div className="min-h-screen flex bg-[#fcf9f5] font-sans overflow-hidden">
+            {/* Background Image / Promo Section ( Estilo Unsplash Premium ) */}
             <div
                 className="hidden lg:flex lg:w-1/2 bg-cover bg-center relative"
                 style={{ backgroundImage: "url('https://images.unsplash.com/photo-1511795409834-ef04bbd61622?q=80&w=1200')" }}

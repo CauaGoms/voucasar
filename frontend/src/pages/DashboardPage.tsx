@@ -138,8 +138,8 @@ export const DashboardPage: React.FC = () => {
     }
 
     return (
-        <div className="min-h-screen bg-[#fdfbf7]">
-            {/* Cabeçalho do Dashboard - Responsivo */}
+        <div className="min-h-screen bg-transparent">
+            {/* Header / Topo do Painel */}
             <div className="bg-white/40 backdrop-blur-md border-b border-primary-100 shadow-sm sticky top-0 z-40">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -196,7 +196,7 @@ export const DashboardPage: React.FC = () => {
                 {/* Stats / Countdown - Melhorado para Mobile */}
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-12">
                     <div className="lg:col-span-8">
-                        <div className="bg-white/70 backdrop-blur-xl rounded-[2rem] p-6 md:p-10 border border-white shadow-xl shadow-primary-500/5 h-full flex flex-col justify-center text-center">
+                        <div className="bg-[#fffcf8] rounded-[2rem] p-6 md:p-10 border border-primary-100 shadow-xl shadow-primary-500/5 h-full flex flex-col justify-center text-center">
                             <h3 className="text-[10px] font-bold tracking-[0.3em] text-[#a89073] uppercase mb-8">
                                 O Grande Dia está Chegando
                             </h3>
@@ -208,7 +208,7 @@ export const DashboardPage: React.FC = () => {
                                     { label: 'Minutos', value: countdown.minutos },
                                     { label: 'Segundos', value: countdown.segundos },
                                 ].map((item, idx) => (
-                                    <div key={idx} className="bg-white rounded-2xl p-4 md:p-6 border border-gray-100 shadow-sm transition-transform hover:scale-[1.02]">
+                                    <div key={idx} className="bg-white rounded-2xl p-4 md:p-6 border border-primary-50 shadow-sm transition-transform hover:scale-[1.02]">
                                         <span className="text-3xl md:text-5xl font-serif text-[#1e293b] leading-none block mb-2">
                                             {String(item.value).padStart(2, '0')}
                                         </span>
@@ -225,7 +225,7 @@ export const DashboardPage: React.FC = () => {
                     <div className="lg:col-span-4 space-y-4">
                         <button
                             onClick={() => casais[0] && navigate(`/casais/${casais[0].id}/template`)}
-                            className="w-full flex items-center justify-between p-6 bg-white rounded-3xl border border-gray-100 hover:border-primary-200 hover:shadow-lg transition-all group"
+                            className="w-full flex items-center justify-between p-6 bg-white rounded-3xl border border-primary-100 hover:border-primary-200 hover:shadow-lg transition-all group"
                         >
                             <div className="flex items-center gap-4 text-left">
                                 <div className="p-3 bg-amber-50 rounded-2xl text-amber-600 group-hover:scale-110 transition-transform">
@@ -240,7 +240,7 @@ export const DashboardPage: React.FC = () => {
 
                         <button
                             onClick={() => casais[0] && navigate(`/casais/${casais[0].id}/presentes`)}
-                            className="w-full flex items-center justify-between p-6 bg-white rounded-3xl border border-gray-100 hover:border-primary-200 hover:shadow-lg transition-all group"
+                            className="w-full flex items-center justify-between p-6 bg-white rounded-3xl border border-primary-100 hover:border-primary-200 hover:shadow-lg transition-all group"
                         >
                             <div className="flex items-center gap-4 text-left">
                                 <div className="p-3 bg-red-50 rounded-2xl text-red-500 group-hover:scale-110 transition-transform">
@@ -257,24 +257,14 @@ export const DashboardPage: React.FC = () => {
 
                 {/* Lista de Casais / Detalhes (Ocultar se já tiver um principal ou expandir funcionalidade) */}
                 {casais.length === 0 && !showForm && (
-                    <div className="card text-center py-20 bg-white/50 backdrop-blur-sm border-dashed border-2 border-primary-200">
-                        <Heart className="mx-auto text-primary-300 mb-6" size={64} />
-                        <h2 className="text-2xl font-serif font-semibold text-gray-900 mb-4">Bem-vindos!</h2>
-                        <p className="text-gray-600 mb-8 max-w-md mx-auto">
-                            Comece criando o seu perfil de casal para ativar a lista de presentes e o site.
-                        </p>
-                        <button
-                            onClick={() => setShowForm(true)}
-                            className="btn btn-primary px-8"
-                        >
-                            Começar Agora
-                        </button>
+                    <div className="card text-center py-20 bg-[#fffcf8] border-dashed border-2 border-primary-200">
+                        {/* ...existing code... */}
                     </div>
                 )}
 
                 {casais.map((casal) => (
                     <div key={casal.id} className="grid grid-cols-1 md:grid-cols-2 gap-8 animate-fade-in-up">
-                        <div className="card p-8 bg-white shadow-sm border border-gray-100 rounded-[2rem]">
+                        <div className="card p-8 bg-white shadow-sm border border-primary-100 rounded-[2rem]">
                             <div className="flex items-center gap-4 mb-6">
                                 <div className="p-3 bg-blue-50 rounded-2xl text-blue-600">
                                     <Users size={24} />
@@ -283,11 +273,11 @@ export const DashboardPage: React.FC = () => {
                             </div>
 
                             <div className="space-y-6">
-                                <div className="flex justify-between items-center p-4 bg-gray-50 rounded-2xl">
+                                <div className="flex justify-between items-center p-4 bg-primary-50/30 rounded-2xl">
                                     <span className="text-sm font-medium text-gray-500">Parceiro(a)</span>
                                     <span className="text-sm font-bold text-gray-900">{casal.email_usuario_2}</span>
                                 </div>
-                                <div className="flex justify-between items-center p-4 bg-gray-50 rounded-2xl">
+                                <div className="flex justify-between items-center p-4 bg-primary-50/30 rounded-2xl">
                                     <span className="text-sm font-medium text-gray-500">Data do Casamento</span>
                                     <span className="text-sm font-bold text-gray-900">{formatarData(casal.data_casamento)}</span>
                                 </div>
@@ -310,18 +300,18 @@ export const DashboardPage: React.FC = () => {
                         </div>
 
                         {/* Espaço para Dicas ou Atalhos Secundários */}
-                        <div className="card p-8 bg-gradient-to-br from-primary-50 to-primary-100/50 text-primary-900 rounded-[2rem] border border-primary-100 shadow-sm flex flex-col justify-between">
+                        <div className="card p-8 bg-gradient-to-br from-primary-100/40 to-primary-200/20 text-primary-900 rounded-[2rem] border border-primary-200/50 shadow-sm flex flex-col justify-between">
                             <div>
-                                <h3 className="text-2xl font-serif font-bold mb-4 text-primary-800">Dica de Ouro</h3>
-                                <p className="text-primary-600/80 text-sm leading-relaxed mb-6">
+                                <h3 className="text-2xl font-serif font-bold mb-4 text-primary-900">Dica de Ouro</h3>
+                                <p className="text-primary-800/80 text-sm leading-relaxed mb-6">
                                     Adicione pelo menos 5 presentes de diferentes faixas de preço para dar opções aos seus convidados. Presentes via PIX caem direto na sua conta!
                                 </p>
                             </div>
-                            <div className="bg-white/50 backdrop-blur-md rounded-2xl p-4 flex items-center gap-4 border border-primary-100">
-                                <div className="w-10 h-10 rounded-full bg-primary-100 text-primary-600 flex items-center justify-center">
+                            <div className="bg-white/40 backdrop-blur-md rounded-2xl p-4 flex items-center gap-4 border border-primary-200/30">
+                                <div className="w-10 h-10 rounded-full bg-primary-200/50 text-primary-700 flex items-center justify-center">
                                     <Share2 size={18} />
                                 </div>
-                                <p className="text-xs font-medium text-primary-700">Link do site ativo: <span className="underline opacity-80 decoration-1">voucasar.com/{template?.slug || casal.id}</span></p>
+                                <p className="text-xs font-semibold text-primary-800">Link do site ativo: <span className="underline opacity-80 decoration-1">voucasar.com/{template?.slug || casal.id}</span></p>
                             </div>
                         </div>
                     </div>
