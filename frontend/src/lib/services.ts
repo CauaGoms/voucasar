@@ -138,7 +138,7 @@ export const presenteAPI = {
         return response.data;
     },
     listarPorCasal: async (casalId: number) => {
-        const response = await api.get(`/presente/casal/${casalId}`);
+        const response = await api.get(`/presente/publico/casal/${casalId}`);
         return response.data;
     },
     deletar: async (id: number) => {
