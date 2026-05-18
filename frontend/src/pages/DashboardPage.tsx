@@ -2,16 +2,17 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { casalAPI, Casal, templateAPI } from '../lib/services';
-import { Heart, Plus, AlertCircle, Loader, Edit2, Trash2, Users, Eye, Share2, Copy, CheckCircle2, CreditCard } from 'lucide-react';
+import { Heart, Plus, AlertCircle, Loader, Edit2, Trash2, Users, Eye, Share2, Copy, CheckCircle2, CreditCard, LogOut } from 'lucide-react';
 
 export const DashboardPage: React.FC = () => {
-    const { usuario } = useAuth();
+    const { usuario, logout } = useAuth();
     const navigate = useNavigate();
     const [casais, setCasais] = useState<Casal[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [showForm, setShowForm] = useState(false);
     const [showPixModal, setShowPixModal] = useState(false);
+    const [showLogoutModal, setShowLogoutModal] = useState(false);
     const [newPixKey, setNewPixKey] = useState('');
     const [formData, setFormData] = useState({
         emailNoivo: '',
@@ -178,6 +179,12 @@ export const DashboardPage: React.FC = () => {
                                 className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-100 hover:border-primary-200 text-gray-700 rounded-xl text-xs font-bold transition-all whitespace-nowrap shadow-sm"
                             >
                                 <Eye size={14} /> Ver Site
+                            </button>
+                            <button
+                                onClick={() => setShowLogoutModal(true)}
+                                className="flex items-center gap-2 px-4 py-2 bg-white border border-red-100 hover:bg-red-50 text-red-600 rounded-xl text-xs font-bold transition-all shadow-sm"
+                            >
+                                <LogOut size={14} /> Sair
                             </button>
                         </div>
                     </div>
@@ -352,6 +359,38 @@ export const DashboardPage: React.FC = () => {
                                     className="flex-1 h-12 bg-primary-600 text-white rounded-2xl font-bold shadow-lg shadow-primary-100"
                                 >
                                     Salvar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Modal Logout */}
+                {showLogoutModal && (
+                    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                        <div className="bg-white rounded-[2.5rem] p-8 max-w-sm w-full shadow-2xl animate-scale-in text-center">
+                            <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <LogOut className="text-red-500" size={32} />
+                            </div>
+                            <h3 className="text-2xl font-serif font-bold text-gray-900 mb-2">Sair do Painel</h3>
+                            <p className="text-sm text-gray-600 mb-8 leading-relaxed">
+                                Tem certeza que deseja encerrar sua sessão?
+                            </p>
+                            <div className="flex gap-3">
+                                <button
+                                    onClick={() => setShowLogoutModal(false)}
+                                    className="flex-1 h-12 rounded-2xl font-bold text-gray-500 hover:bg-gray-50 transition-colors"
+                                >
+                                    Cancelar
+                                </button>
+                                <button
+                                    onClick={async () => {
+                                        await logout();
+                                        navigate('/login');
+                                    }}
+                                    className="flex-1 h-12 bg-red-500 text-white rounded-2xl font-bold shadow-lg shadow-red-100 hover:bg-red-600 transition-colors"
+                                >
+                                    Sair
                                 </button>
                             </div>
                         </div>

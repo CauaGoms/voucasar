@@ -41,15 +41,6 @@ export const Header: React.FC = () => {
                             <Link to="/presentes" className="text-gray-700 hover:text-primary-600 transition">
                                 Presentes
                             </Link>
-                            <div className="flex items-center gap-4">
-                                <button
-                                    onClick={handleLogout}
-                                    className="flex items-center gap-2 text-gray-700 hover:text-red-600 transition"
-                                >
-                                    <LogOut size={18} />
-                                    Sair
-                                </button>
-                            </div>
                         </nav>
                     )}
 
@@ -83,11 +74,11 @@ export const Header: React.FC = () => {
             {showConfirmLogout && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
                     {/* Overlay */}
-                    <div 
+                    <div
                         className="fixed inset-0 bg-black/40 backdrop-blur-sm transition-opacity animate-fade-in"
                         onClick={() => setShowConfirmLogout(false)}
                     ></div>
-                    
+
                     {/* Modal Content */}
                     <div className="bg-white/95 backdrop-blur-md rounded-2xl p-6 max-w-sm w-full shadow-2xl border border-primary-200/50 relative z-10 transform scale-100 transition-all text-center animate-fade-in">
                         <div className="w-12 h-12 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4 border border-red-100">
