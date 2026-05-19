@@ -81,9 +81,9 @@ async def criar_ou_atualizar_template(casal_id: int, request: Request, usuario_l
         logger.error(f"Erro ao salvar template: {e}")
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
 
-@router.get("/publico/{casal_id}")
-async def buscar_template_publico(casal_id: int):
-    """Busca um template publicamente (sem autenticação) para exibir na página do casamento"""
+@router.get("/publico/id/{casal_id}")
+async def buscar_template_publico_por_id(casal_id: int):
+    """Busca um template publicamente pelo ID do casal"""
     try:
         template = template_repo.buscar_por_casal(casal_id)
         if not template:
@@ -100,7 +100,7 @@ async def buscar_template_publico(casal_id: int):
             "local_recepcao": template.local_recepcao
         })
     except Exception as e:
-        logger.error(f"Erro ao buscar template público: {e}")
+        logger.error(f"Erro ao buscar template público por ID: {e}")
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
 
 @router.get("/{casal_id}")
@@ -141,7 +141,7 @@ async def deletar_template(casal_id: int, request: Request, usuario_logado: dict
 async def buscar_template_por_slug(slug: str):
     """Busca o template de um casal pelo slug único"""
     try:
-        # Primeiro busca pelo campo slug exato no banco
+        # Primeiro busca pelo slug exato no banco
         t = template_repo.buscar_por_slug(slug)
         if t:
             return JSONResponse({
@@ -155,6 +155,26 @@ async def buscar_template_por_slug(slug: str):
                 "local_cerimonia": t.local_cerimonia,
                 "local_recepcao": t.local_recepcao
             })
+
+        # Se não encontrou exato, tenta buscar por prefixo (caso o slug seja incompleto)
+        # Ex: procura "lais-e-antonio" e encontra "lais-e-antonio-abc123"
+        try:
+            all_templates = template_repo.listar()  # Precisa de um método para listar todos
+            for template in all_templates:
+                if template.slug and template.slug.startswith(slug):
+                    return JSONResponse({
+                        "id": template.id,
+                        "id_casal": template.id_casal,
+                        "slug": template.slug,
+                        "foto_casal_vertical": template.foto_casal_vertical,
+                        "foto_casal_horizontal": template.foto_casal_horizontal,
+                        "texto_casal": template.texto_casal,
+                        "nomes_noivos": template.nomes_noivos,
+                        "local_cerimonia": template.local_cerimonia,
+                        "local_recepcao": template.local_recepcao
+                    })
+        except Exception:
+            pass
 
         # Fallback para ID se for numérico
         try:

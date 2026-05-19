@@ -8,6 +8,22 @@ from backend.data.repo import casal as casal_repo
 router = APIRouter(prefix="/casal", tags=["casal"])
 logger = logging.getLogger(__name__)
 
+@router.get("/publico/{casal_id}")
+async def buscar_casal_publico(casal_id: int):
+    """Busca informações básicas de um casal publicamente"""
+    try:
+        casal = casal_repo.buscar_por_id(casal_id)
+        if not casal:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Casal não encontrado")
+        return JSONResponse({
+            "id": casal.id,
+            "data_casamento": str(casal.data_casamento),
+            "chave_pix": casal.chave_pix,
+        })
+    except Exception as e:
+        logger.error(f"Erro ao buscar casal público: {e}")
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+
 @router.post("")
 @requer_autenticacao()
 async def criar_casal(request: Request, usuario_logado: dict = None):
@@ -95,22 +111,6 @@ async def deletar_casal_endpoint(casal_id: int, request: Request, usuario_logado
         return JSONResponse({"mensagem": "Casal deletado com sucesso"})
     except Exception as e:
         logger.error(f"Erro ao deletar casal: {e}")
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
-
-@router.get("/publico/{casal_id}")
-async def buscar_casal_publico(casal_id: int):
-    """Busca informações básicas de um casal publicamente"""
-    try:
-        casal = casal_repo.buscar_por_id(casal_id)
-        if not casal:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Casal não encontrado")
-        return JSONResponse({
-            "id": casal.id,
-            "data_casamento": str(casal.data_casamento),
-            "chave_pix": casal.chave_pix,
-        })
-    except Exception as e:
-        logger.error(f"Erro ao buscar casal público: {e}")
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
 
 @router.get("")

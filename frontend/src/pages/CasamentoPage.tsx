@@ -274,21 +274,21 @@ export const CasamentoPage: React.FC = () => {
                     </h2>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                         <button
-                            onClick={() => window.location.href = `/casamento/${casalId}/lista-presentes`}
+                            onClick={() => window.location.href = `/casamento/${template?.slug || casalId}/lista-presentes`}
                             className="card p-8 text-center hover:shadow-lg transition"
                         >
                             <Heart className="mx-auto text-primary-600 mb-4" size={32} />
                             <h3 className="text-lg font-semibold text-gray-900">Lista de Presentes</h3>
                         </button>
                         <button
-                            onClick={() => window.location.href = `/casamento/${casalId}/confirmar-presenca`}
+                            onClick={() => window.location.href = `/casamento/${template?.slug || casalId}/confirmar-presenca`}
                             className="card p-8 text-center hover:shadow-lg transition"
                         >
                             <Heart className="mx-auto text-primary-600 mb-4" size={32} />
                             <h3 className="text-lg font-semibold text-gray-900">Confirmar Presença</h3>
                         </button>
                         <button
-                            onClick={() => window.location.href = `/casamento/${casalId}/detalhes`}
+                            onClick={() => window.location.href = `/casamento/${template?.slug || casalId}/detalhes`}
                             className="card p-8 text-center hover:shadow-lg transition"
                         >
                             <Calendar className="mx-auto text-primary-600 mb-4" size={32} />

@@ -24,14 +24,8 @@ export const DashboardPage: React.FC = () => {
     const [template, setTemplate] = useState<any>(null);
 
     const handleCopyLink = (id: number) => {
-        const slug = template?.slug || (template?.nomes_noivos ? template.nomes_noivos
-            .normalize('NFD')
-            .replace(/[\u0300-\u036f]/g, '')
-            .toLowerCase()
-            .replace(/[^a-z0-9\-]/g, '-')
-            .replace(/-+/g, '-')
-            .replace(/^-+|-+$/g, '') : null);
-
+        // Usar slug do template se disponível
+        const slug = template?.slug;
         const urlOrPath = slug ? `/casamento/${slug}` : `/casamento/${id}`;
         const url = `${window.location.origin}${urlOrPath}`;
 
@@ -98,13 +92,26 @@ export const DashboardPage: React.FC = () => {
             return;
         }
         try {
-            await casalAPI.criar({
+            const novosCasais = await casalAPI.criar({
                 id_usuario_1: usuario?.id || 0,
                 id_usuario_2: 0,
                 email_usuario_2: formData.emailNoivo,
                 data_casamento: formData.dataCasamento,
                 chave_pix: formData.chavePix,
             } as Casal);
+            
+            // Criar template automaticamente com os nomes dos noivos
+            if (novosCasais.id && usuario?.nome) {
+                try {
+                    await templateAPI.atualizar(novosCasais.id, {
+                        nomes_noivos: usuario.nome || '',
+                        slug: '',  // Backend vai gerar automaticamente
+                    } as any);
+                } catch (templateErr) {
+                    console.log('Aviso: não foi possível criar template automaticamente', templateErr);
+                }
+            }
+            
             setFormData({
                 emailNoivo: '',
                 dataCasamento: '',
