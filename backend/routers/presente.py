@@ -8,6 +8,28 @@ from backend.data.repo import presente as presente_repo
 router = APIRouter(prefix="/presente", tags=["presente"])
 logger = logging.getLogger(__name__)
 
+@router.get("/publico/casal/{casal_id}")
+async def listar_presentes_publico_por_casal_endpoint(casal_id: int):
+    """Lista presentes de forma pública para convidados"""
+    try:
+        presentes = presente_repo.listar_por_casal(casal_id)
+        return JSONResponse([
+            {
+                "id": p.id,
+                "id_casal": p.id_casal,
+                "id_categoria": p.id_categoria,
+                "titulo": p.titulo,
+                "descricao": p.descricao,
+                "valor_estimado": float(p.valor_estimado) if p.valor_estimado is not None else None,
+                "status": p.status,
+                "foto_url": p.foto_url,
+                "link_produto": p.link_produto
+            } for p in presentes
+        ])
+    except Exception as e:
+        logger.error(f"Erro ao listar presentes públicos: {e}")
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+
 @router.post("")
 @requer_autenticacao()
 async def criar_presente(request: Request, usuario_logado: dict = None):
@@ -137,24 +159,3 @@ async def listar_presentes_por_casal_endpoint(casal_id: int, request: Request, u
         logger.error(f"Erro ao listar presentes: {e}")
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
 
-@router.get("/publico/casal/{casal_id}")
-async def listar_presentes_publico_por_casal_endpoint(casal_id: int):
-    """Lista presentes de forma pública para convidados"""
-    try:
-        presentes = presente_repo.listar_por_casal(casal_id)
-        return JSONResponse([
-            {
-                "id": p.id,
-                "id_casal": p.id_casal,
-                "id_categoria": p.id_categoria,
-                "titulo": p.titulo,
-                "descricao": p.descricao,
-                "valor_estimado": float(p.valor_estimado) if p.valor_estimado is not None else None,
-                "status": p.status,
-                "foto_url": p.foto_url,
-                "link_produto": p.link_produto
-            } for p in presentes
-        ])
-    except Exception as e:
-        logger.error(f"Erro ao listar presentes públicos: {e}")
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
