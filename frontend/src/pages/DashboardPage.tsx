@@ -341,6 +341,25 @@ export const DashboardPage: React.FC = () => {
                                 </div>
                             </div>
                         </button>
+
+                        {/* Nova Tab: Ver Contribuições */}
+                        <button
+                            onClick={(e) => {
+                                e.preventDefault();
+                                if (casais[0]) navigate(`/casais/${casais[0].id}/contribuicoes`);
+                            }}
+                            className="w-full h-full min-h-[100px] flex items-center justify-between p-6 bg-white rounded-3xl border border-primary-100 active:bg-primary-50 active:scale-[0.98] lg:hover:border-primary-200 lg:hover:shadow-lg transition-all group cursor-pointer"
+                        >
+                            <div className="flex items-center gap-4 text-left pointer-events-none">
+                                <div className="p-3 bg-green-50 rounded-2xl text-green-500 transition-transform">
+                                    <Heart size={24} />
+                                </div>
+                                <div>
+                                    <h4 className="font-bold text-gray-900">Doações Recebidas</h4>
+                                    <p className="text-xs text-gray-500">Quem já te presenteou</p>
+                                </div>
+                            </div>
+                        </button>
                     </div>
                 </div>
 

@@ -326,7 +326,7 @@ export const ListaPresentes: React.FC = () => {
                                             });
                                             setPixInfo({
                                                 chave: response.chave_pix,
-                                                transacaoId: 0,
+                                                transacaoId: response.id,
                                                 payloadPix: response.payload_pix,
                                                 qrCodeBase64: response.qr_code_base64,
                                             });
@@ -437,10 +437,16 @@ export const ListaPresentes: React.FC = () => {
                                     </p>
 
                                     <button
-                                        onClick={() => {
+                                        onClick={async () => {
+                                            if (pixInfo?.transacaoId) {
+                                                try {
+                                                    await transacaoPresenteAPI.confirmarPagamentoPublico(pixInfo.transacaoId);
+                                                } catch (e) {}
+                                            }
                                             setSelectedPresente(null);
                                             setPixInfo(null);
                                             setGuestInfo({ nome: '', email: '' });
+                                            alert("Muito obrigado pela contribuição!");
                                         }}
                                         className="btn btn-primary w-full"
                                     >
@@ -654,11 +660,19 @@ export const ListaPresentes: React.FC = () => {
                                     </div>
 
                                     <button
-                                        onClick={() => {
+                                        onClick={async () => {
+                                            if (pixInfo?.transacaoId) {
+                                                try {
+                                                    await transacaoPresenteAPI.confirmarPagamentoPublico(pixInfo.transacaoId);
+                                                    alert("Muito obrigado! Nós avisaremos os noivos sobre o seu presente.");
+                                                } catch (e) {
+                                                    // Handle/ignore silently if they click multiple times
+                                                }
+                                            }
                                             setSelectedPresente(null);
                                             setPixInfo(null);
                                             setGuestInfo({ nome: '', email: '' });
-                                            carregarDados(); // Atualiza a lista instantaneamente!
+                                            carregarDados();
                                         }}
                                         className="btn btn-primary w-full shadow-lg shadow-primary-100"
                                     >

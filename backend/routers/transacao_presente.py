@@ -183,15 +183,13 @@ async def criar_transacao_publico(request: Request, transacao_data: dict = Body(
         )
         cod_transacao = transacao_repo.inserir(transacao)
 
-        # Buscar chave PIX do casal e o presente para o valor
+        # Buscar chave PIX do casal e o presente
         casal = casal_repo.buscar_por_id(id_casal)
         
         from backend.data.repo import presente as presente_repo
         presente = presente_repo.buscar_por_id(id_presente)
         
-        if presente:
-            presente.status = "comprado"
-            presente_repo.atualizar(presente)
+        # O PRESENTE NÃO MUDA DE STATUS PARA QUE OUTROS POSSAM CONTRIBUIR
             
         valor_estimado = presente.valor_estimado if presente else 0
         
@@ -228,9 +226,13 @@ async def criar_transacao_publico(request: Request, transacao_data: dict = Body(
 
 @router.post("/publico/cota-livre")
 async def criar_cota_livre_publico(request: Request, data: dict = Body(...)):
-    """Gera um PIX com valor customizado para Cota Livre"""
+    """Gera um PIX com valor customizado para Cota Livre e registra no banco"""
     try:
         from backend.data.repo import casal as casal_repo
+        from backend.data.repo import usuario as usuario_repo
+        from backend.data.model.usuario import Usuario
+        from util.security import criar_hash_senha
+        import uuid
         from util.pix import gerar_payload_pix, gerar_qr_code_base64
         
         id_casal = data.get("id_casal")
@@ -238,17 +240,40 @@ async def criar_cota_livre_publico(request: Request, data: dict = Body(...)):
         nome = data.get("nome_convidado")
         email = data.get("email_convidado")
         
-        if not id_casal or not valor:
+        if not id_casal or not valor or not nome or not email:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Dados incompletos")
             
         casal = casal_repo.buscar_por_id(id_casal)
         if not casal or not casal.chave_pix:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Casal ou chave PIX não encontrado")
             
-        # Gera txid dinâmico
-        import random
-        r_num = random.randint(1000, 9999)
-        txid = f"COTA{r_num}"
+        # Verificar se usuário convidado já existe
+        usuario = usuario_repo.buscar_por_email(email)
+        if not usuario:
+            senha_aleatoria = str(uuid.uuid4())
+            usuario = Usuario(
+                id=0,
+                nome=nome,
+                email=email,
+                senha=criar_hash_senha(senha_aleatoria)
+            )
+            id_convidado = usuario_repo.inserir(usuario)
+        else:
+            id_convidado = usuario.id
+
+        # Criar a transação (id_presente = None para cota livre)
+        transacao = TransacaoPresente(
+            id=0,
+            id_presente=None,
+            id_fonte_compra=None, 
+            id_casal=id_casal,
+            id_convidado=id_convidado,
+            assinatura_remetente=f"{nome} (Cota Livre R${valor})",
+            status_pagamento="pendente"
+        )
+        cod_transacao = transacao_repo.inserir(transacao)
+
+        txid = f"COTA{cod_transacao:04d}"
         
         payload_pix = gerar_payload_pix(
             chave_pix=casal.chave_pix,
@@ -260,6 +285,7 @@ async def criar_cota_livre_publico(request: Request, data: dict = Body(...)):
         qr_code_base64 = gerar_qr_code_base64(payload_pix)
         
         return JSONResponse({
+            "id": cod_transacao,
             "chave_pix": casal.chave_pix,
             "payload_pix": payload_pix,
             "qr_code_base64": qr_code_base64,
@@ -267,4 +293,20 @@ async def criar_cota_livre_publico(request: Request, data: dict = Body(...)):
         })
     except Exception as e:
         logger.error(f"Erro ao gerar cota livre PIX: {e}")
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+
+@router.post("/publico/{transacao_id}/confirmar")
+async def confirmar_pagamento_publico(transacao_id: int):
+    """Marca que o convidado confirmou ter realizado o pagamento"""
+    try:
+        transacao = transacao_repo.buscar_por_id(transacao_id)
+        if not transacao:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Transação não encontrada")
+        
+        transacao.status_pagamento = "pago"
+        transacao_repo.atualizar(transacao)
+        
+        return JSONResponse({"mensagem": "Pagamento confirmado com sucesso!"})
+    except Exception as e:
+        logger.error(f"Erro ao confirmar pagamento: {e}")
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))

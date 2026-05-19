@@ -12,6 +12,7 @@ import { CasamentoPage } from './pages/CasamentoPage';
 import { ConfirmarPresencaPage } from './pages/ConfirmarPresencaPage';
 import { MaisDetalhesPage } from './pages/MaisDetalhesPage';
 import { ListaPresentes } from './pages/ListaPresentes';
+import { ContribuicoesPage } from './pages/ContribuicoesPage';
 import './index.css';
 
 function App() {
@@ -39,6 +40,14 @@ function App() {
                                 element={
                                     <ProtectedRoute>
                                         <PresentsPage />
+                                    </ProtectedRoute>
+                                }
+                            />
+                            <Route
+                                path="/casais/:casalId/contribuicoes"
+                                element={
+                                    <ProtectedRoute>
+                                        <ContribuicoesPage />
                                     </ProtectedRoute>
                                 }
                             />

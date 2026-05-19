@@ -39,6 +39,13 @@ export const TemplateEditPage: React.FC = () => {
             setCasal(casalData);
 
             if (templateData) {
+                // Ensure date string is compatible with <input type="datetime-local">
+                let initialDateStr = casalData.data_casamento || '';
+                if (initialDateStr && !initialDateStr.includes('T')) {
+                    // converts "YYYY-MM-DD HH:mm:ss" to "YYYY-MM-DDTHH:mm"
+                    initialDateStr = initialDateStr.replace(' ', 'T').slice(0, 16);
+                }
+
                 setFormData({
                     nomes_noivos: templateData.nomes_noivos || '',
                     texto_casal: templateData.texto_casal || '',
@@ -46,7 +53,7 @@ export const TemplateEditPage: React.FC = () => {
                     local_recepcao: templateData.local_recepcao || '',
                     foto_casal_vertical: templateData.foto_casal_vertical || '',
                     foto_casal_horizontal: templateData.foto_casal_horizontal || '',
-                    data_casamento: casalData.data_casamento || '',
+                    data_casamento: initialDateStr,
                     is_public: templateData.is_public ?? true,
                 });
             }
@@ -210,9 +217,9 @@ export const TemplateEditPage: React.FC = () => {
                                 />
                             </div>
                             <div>
-                                <label className="label">Data do Casamento</label>
+                                <label className="label">Data e Hora do Casamento</label>
                                 <input
-                                    type="date"
+                                    type="datetime-local"
                                     value={formData.data_casamento}
                                     onChange={(e) =>
                                         setFormData({ ...formData, data_casamento: e.target.value })

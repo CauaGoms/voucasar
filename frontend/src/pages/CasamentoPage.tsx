@@ -176,12 +176,18 @@ export const CasamentoPage: React.FC = () => {
                                 Save The Date
                             </p>
 
-                            <p className="text-xs md:text-lg font-caps tracking-[0.2em] text-[#d6aa65] mb-6 md:mb-8 uppercase font-medium">
+                            <p className="text-xs md:text-lg font-caps tracking-[0.2em] text-[#d6aa65] mb-2 uppercase font-medium">
                                 {new Date(casal.data_casamento).toLocaleDateString('pt-BR', {
                                     day: '2-digit',
                                     month: 'long',
                                     year: 'numeric'
                                 })}
+                            </p>
+                            <p className="text-[10px] md:text-sm font-caps tracking-[0.2em] text-[#d6aa65] mb-6 md:mb-8 uppercase font-medium">
+                                ÀS {new Date(casal.data_casamento).toLocaleTimeString('pt-BR', {
+                                    hour: '2-digit',
+                                    minute: '2-digit'
+                                })}HS
                             </p>
 
                             <h2 className="text-5xl md:text-8xl font-script-logo text-[#2d3748] mt-4 mb-6 md:mb-8 break-words">
