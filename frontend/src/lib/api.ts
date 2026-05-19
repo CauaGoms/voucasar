@@ -9,8 +9,8 @@ const isLocalhost = Boolean(
 
 // 2. Define a URL base dinamicamente com base no ambiente
 const API_BASE_URL = isLocalhost
-    ? 'http://localhost:8000/api'  // Use /api prefix for consistency
-    : 'https://voucasar.cauamarvila.com.br/api';
+    ? 'http://localhost:8000'
+    : 'https://voucasar.cauamarvila.com.br/api'; // O Nginx deve encaminhar /api para o backend
 
 const api: AxiosInstance = axios.create({
     baseURL: API_BASE_URL,
