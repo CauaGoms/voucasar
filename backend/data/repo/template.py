@@ -36,7 +36,7 @@ def inserir(template: Template) -> Optional[int]:
             return template_id
     except Exception as e:
         print(f"Erro ao inserir template: {e}")
-        return None
+        raise e
 
 def atualizar(template: Template) -> bool:
     try:
@@ -58,7 +58,7 @@ def atualizar(template: Template) -> bool:
             return True
     except Exception as e:
         print(f"Erro ao atualizar template: {e}")
-        return False
+        raise e
 
 def buscar_por_casal(id_casal: int) -> Optional[Template]:
     try:

@@ -63,8 +63,41 @@ export const TemplateEditPage: React.FC = () => {
         if (file) {
             const reader = new FileReader();
             reader.onload = (event) => {
-                const base64 = event.target?.result as string;
-                setFormData({ ...formData, [field]: base64 });
+                const img = new Image();
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    let width = img.width;
+                    let height = img.height;
+                    
+                    // Definir o tamanho máximo desejado (reduz o peso consideravelmente)
+                    const MAX_WIDTH = 1200;
+                    const MAX_HEIGHT = 1200;
+
+                    if (width > height) {
+                        if (width > MAX_WIDTH) {
+                            height = Math.round((height *= MAX_WIDTH / width));
+                            width = MAX_WIDTH;
+                        }
+                    } else {
+                        if (height > MAX_HEIGHT) {
+                            width = Math.round((width *= MAX_HEIGHT / height));
+                            height = MAX_HEIGHT;
+                        }
+                    }
+
+                    canvas.width = width;
+                    canvas.height = height;
+
+                    const ctx = canvas.getContext('2d');
+                    ctx?.drawImage(img, 0, 0, width, height);
+
+                    // Converter para WebP ou JPEG base64 com qualidade 0.7 (70%)
+                    const compressedBase64 = canvas.toDataURL('image/jpeg', 0.7);
+                    
+                    // Atualiza o formulário e força a reactividade copiando o objeto formData anterior
+                    setFormData(prev => ({ ...prev, [field]: compressedBase64 }));
+                };
+                img.src = event.target?.result as string;
             };
             reader.readAsDataURL(file);
         }
@@ -96,7 +129,8 @@ export const TemplateEditPage: React.FC = () => {
             setSuccess('Template salvo com sucesso!');
             setTimeout(() => setSuccess(''), 3000);
         } catch (err: any) {
-            setError('Erro ao salvar template');
+            const errorMessage = err.response?.data?.detail || err.message || 'Erro inesperado';
+            setError(`Erro ao salvar template: ${errorMessage}`);
             console.error(err);
         }
     };

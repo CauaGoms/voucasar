@@ -63,7 +63,12 @@ async def criar_ou_atualizar_template(casal_id: int, request: Request, usuario_l
         )
         
         if template_existente:
-            template_repo.atualizar(template)
+            sucesso = template_repo.atualizar(template)
+            if not sucesso:
+                raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    detail="Falha ao atualizar o template no banco de dados."
+                )
             return JSONResponse({
                 "id": template_existente.id,
                 "id_casal": casal_id,
@@ -72,12 +77,19 @@ async def criar_ou_atualizar_template(casal_id: int, request: Request, usuario_l
             }, status_code=status.HTTP_200_OK)
         else:
             template_id = template_repo.inserir(template)
+            if not template_id:
+                raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    detail="Falha ao criar o template no banco de dados."
+                )
             return JSONResponse({
                 "id": template_id,
                 "id_casal": casal_id,
                 "slug": slug,
                 "mensagem": "Template criado com sucesso"
             }, status_code=status.HTTP_201_CREATED)
+    except HTTPException as e:
+        raise e
     except Exception as e:
         logger.error(f"Erro ao salvar template: {e}")
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
