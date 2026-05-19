@@ -68,7 +68,7 @@ export const TemplateEditPage: React.FC = () => {
                     const canvas = document.createElement('canvas');
                     let width = img.width;
                     let height = img.height;
-                    
+
                     // Definir o tamanho máximo desejado (reduz o peso consideravelmente)
                     const MAX_WIDTH = 1200;
                     const MAX_HEIGHT = 1200;
@@ -93,7 +93,7 @@ export const TemplateEditPage: React.FC = () => {
 
                     // Converter para WebP ou JPEG base64 com qualidade 0.7 (70%)
                     const compressedBase64 = canvas.toDataURL('image/jpeg', 0.7);
-                    
+
                     // Atualiza o formulário e força a reactividade copiando o objeto formData anterior
                     setFormData(prev => ({ ...prev, [field]: compressedBase64 }));
                 };
