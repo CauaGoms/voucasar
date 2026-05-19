@@ -64,6 +64,7 @@ export interface Template {
     nomes_noivos: string;
     local_cerimonia: string;
     local_recepcao: string;
+    is_public?: boolean;
 }
 
 // Auth APIs

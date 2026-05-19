@@ -11,4 +11,4 @@ class Template:
     nomes_noivos: str = ""
     local_cerimonia: str = ""
     local_recepcao: str = ""
-    
+    is_public: bool = True

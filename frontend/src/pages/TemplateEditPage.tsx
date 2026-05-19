@@ -21,6 +21,7 @@ export const TemplateEditPage: React.FC = () => {
         foto_casal_vertical: '',
         foto_casal_horizontal: '',
         data_casamento: '',
+        is_public: true,
     });
 
     useEffect(() => {
@@ -46,6 +47,7 @@ export const TemplateEditPage: React.FC = () => {
                     foto_casal_vertical: templateData.foto_casal_vertical || '',
                     foto_casal_horizontal: templateData.foto_casal_horizontal || '',
                     data_casamento: casalData.data_casamento || '',
+                    is_public: templateData.is_public ?? true,
                 });
             }
         } catch (err: any) {
@@ -84,6 +86,7 @@ export const TemplateEditPage: React.FC = () => {
                     local_recepcao: formData.local_recepcao,
                     foto_casal_vertical: formData.foto_casal_vertical,
                     foto_casal_horizontal: formData.foto_casal_horizontal,
+                    is_public: formData.is_public,
                 } as Partial<Template>),
                 casalAPI.atualizar(parseInt(casalId!), {
                     data_casamento: formData.data_casamento
@@ -142,7 +145,22 @@ export const TemplateEditPage: React.FC = () => {
                 <form onSubmit={handleSubmit} className="space-y-8">
                     {/* Informações Básicas */}
                     <div className="card">
-                        <h2 className="section-title mb-6">Informações Básicas</h2>
+                        <div className="flex justify-between items-center mb-6">
+                            <h2 className="section-title mb-0">Informações Básicas</h2>
+                            <label className="flex items-center cursor-pointer">
+                                <span className="mr-3 text-sm font-medium text-gray-700">Disponibilizar ao público</span>
+                                <div className="relative">
+                                    <input
+                                        type="checkbox"
+                                        className="sr-only"
+                                        checked={formData.is_public}
+                                        onChange={(e) => setFormData({ ...formData, is_public: e.target.checked })}
+                                    />
+                                    <div className={`block w-14 h-8 rounded-full ${formData.is_public ? 'bg-primary-500' : 'bg-gray-300'}`}></div>
+                                    <div className={`dot absolute left-1 top-1 bg-white w-6 h-6 rounded-full transition ${formData.is_public ? 'transform translate-x-6' : ''}`}></div>
+                                </div>
+                            </label>
+                        </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                             <div>

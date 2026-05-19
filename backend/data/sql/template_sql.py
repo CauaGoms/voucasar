@@ -9,6 +9,7 @@ CREATE TABLE IF NOT EXISTS Template (
     nomes_noivos VARCHAR(255),
     local_cerimonia VARCHAR(500),
     local_recepcao VARCHAR(500),
+    is_public BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (id_casal) REFERENCES Casal(id) ON DELETE CASCADE
@@ -23,9 +24,10 @@ INSERT INTO Template (
     texto_casal,
     nomes_noivos,
     local_cerimonia,
-    local_recepcao
+    local_recepcao,
+    is_public
 )
-VALUES (%s, %s, %s, %s, %s, %s, %s, %s);
+VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s);
 """
 
 ATUALIZAR = """
@@ -37,27 +39,28 @@ SET
     texto_casal = %s,
     nomes_noivos = %s,
     local_cerimonia = %s,
-    local_recepcao = %s
+    local_recepcao = %s,
+    is_public = %s
 WHERE id_casal = %s;
 """
 
 BUSCAR_POR_CASAL = """
 SELECT id, id_casal, slug, foto_casal_vertical, foto_casal_horizontal, texto_casal,
-       nomes_noivos, local_cerimonia, local_recepcao
+       nomes_noivos, local_cerimonia, local_recepcao, is_public
 FROM Template
 WHERE id_casal = %s;
 """
 
 BUSCAR_POR_ID = """
 SELECT id, id_casal, slug, foto_casal_vertical, foto_casal_horizontal, texto_casal,
-       nomes_noivos, local_cerimonia, local_recepcao
+       nomes_noivos, local_cerimonia, local_recepcao, is_public
 FROM Template
 WHERE id = %s;
 """
 
 BUSCAR_POR_SLUG = """
 SELECT id, id_casal, slug, foto_casal_vertical, foto_casal_horizontal, texto_casal,
-       nomes_noivos, local_cerimonia, local_recepcao
+       nomes_noivos, local_cerimonia, local_recepcao, is_public
 FROM Template
 WHERE slug = %s;
 """
@@ -69,6 +72,6 @@ WHERE id_casal = %s;
 
 LISTAR_TODOS = """
 SELECT id, id_casal, slug, foto_casal_vertical, foto_casal_horizontal, texto_casal,
-       nomes_noivos, local_cerimonia, local_recepcao
+       nomes_noivos, local_cerimonia, local_recepcao, is_public
 FROM Template;
 """

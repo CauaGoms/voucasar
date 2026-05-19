@@ -58,7 +58,8 @@ async def criar_ou_atualizar_template(casal_id: int, request: Request, usuario_l
             texto_casal=template_data.get("texto_casal", ""),
             nomes_noivos=nomes_noivos,
             local_cerimonia=template_data.get("local_cerimonia", ""),
-            local_recepcao=template_data.get("local_recepcao", "")
+            local_recepcao=template_data.get("local_recepcao", ""),
+            is_public=template_data.get("is_public", True)
         )
         
         if template_existente:
@@ -86,8 +87,8 @@ async def buscar_template_publico(casal_id: int):
     """Busca um template publicamente (sem autenticação) para exibir na página do casamento"""
     try:
         template = template_repo.buscar_por_casal(casal_id)
-        if not template:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Casamento não encontrado")
+        if not template or not template.is_public:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Casamento não encontrado ou privado")
         return JSONResponse({
             "id": template.id,
             "id_casal": template.id_casal,
@@ -97,7 +98,8 @@ async def buscar_template_publico(casal_id: int):
             "texto_casal": template.texto_casal,
             "nomes_noivos": template.nomes_noivos,
             "local_cerimonia": template.local_cerimonia,
-            "local_recepcao": template.local_recepcao
+            "local_recepcao": template.local_recepcao,
+            "is_public": template.is_public
         })
     except Exception as e:
         logger.error(f"Erro ao buscar template público: {e}")
@@ -120,7 +122,8 @@ async def buscar_template(casal_id: int, request: Request, usuario_logado: dict 
             "texto_casal": template.texto_casal,
             "nomes_noivos": template.nomes_noivos,
             "local_cerimonia": template.local_cerimonia,
-            "local_recepcao": template.local_recepcao
+            "local_recepcao": template.local_recepcao,
+            "is_public": template.is_public
         })
     except Exception as e:
         logger.error(f"Erro ao buscar template: {e}")
@@ -143,7 +146,7 @@ async def buscar_template_por_slug(slug: str):
     try:
         # Primeiro busca pelo campo slug exato no banco
         t = template_repo.buscar_por_slug(slug)
-        if t:
+        if t and t.is_public:
             return JSONResponse({
                 "id": t.id,
                 "id_casal": t.id_casal,
@@ -153,14 +156,15 @@ async def buscar_template_por_slug(slug: str):
                 "texto_casal": t.texto_casal,
                 "nomes_noivos": t.nomes_noivos,
                 "local_cerimonia": t.local_cerimonia,
-                "local_recepcao": t.local_recepcao
+                "local_recepcao": t.local_recepcao,
+                "is_public": t.is_public
             })
 
         # Fallback para ID se for numérico
         try:
             casal_id = int(slug)
             t = template_repo.buscar_por_casal(casal_id)
-            if t:
+            if t and t.is_public:
                 return JSONResponse({
                     "id": t.id,
                     "id_casal": t.id_casal,
@@ -170,7 +174,8 @@ async def buscar_template_por_slug(slug: str):
                     "texto_casal": t.texto_casal,
                     "nomes_noivos": t.nomes_noivos,
                     "local_cerimonia": t.local_cerimonia,
-                    "local_recepcao": t.local_recepcao
+                    "local_recepcao": t.local_recepcao,
+                    "is_public": t.is_public
                 })
         except ValueError:
             pass

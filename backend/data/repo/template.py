@@ -27,7 +27,8 @@ def inserir(template: Template) -> Optional[int]:
                 template.texto_casal,
                 template.nomes_noivos,
                 template.local_cerimonia,
-                template.local_recepcao
+                template.local_recepcao,
+                template.is_public
             ))
             template_id = cursor.lastrowid
             conn.commit()
@@ -49,6 +50,7 @@ def atualizar(template: Template) -> bool:
                 template.nomes_noivos,
                 template.local_cerimonia,
                 template.local_recepcao,
+                template.is_public,
                 template.id_casal
             ))
             conn.commit()
@@ -75,7 +77,8 @@ def buscar_por_casal(id_casal: int) -> Optional[Template]:
                     texto_casal=resultado[5],
                     nomes_noivos=resultado[6],
                     local_cerimonia=resultado[7],
-                    local_recepcao=resultado[8]
+                    local_recepcao=resultado[8],
+                    is_public=bool(resultado[9])
                 )
             return None
     except Exception as e:
@@ -99,7 +102,8 @@ def buscar_por_slug(slug: str) -> Optional[Template]:
                     texto_casal=resultado[5],
                     nomes_noivos=resultado[6],
                     local_cerimonia=resultado[7],
-                    local_recepcao=resultado[8]
+                    local_recepcao=resultado[8],
+                    is_public=bool(resultado[9])
                 )
             return None
     except Exception as e:
@@ -123,7 +127,8 @@ def buscar_por_id(template_id: int) -> Optional[Template]:
                     texto_casal=resultado[5],
                     nomes_noivos=resultado[6],
                     local_cerimonia=resultado[7],
-                    local_recepcao=resultado[8]
+                    local_recepcao=resultado[8],
+                    is_public=bool(resultado[9])
                 )
             return None
     except Exception as e:
@@ -148,7 +153,8 @@ def listar_todos() -> list[Template]:
                     texto_casal=resultado[5],
                     nomes_noivos=resultado[6],
                     local_cerimonia=resultado[7],
-                    local_recepcao=resultado[8]
+                    local_recepcao=resultado[8],
+                    is_public=bool(resultado[9])
                 ))
             return templates
     except Exception as e:
