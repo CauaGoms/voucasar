@@ -69,20 +69,10 @@ export interface Template {
 export const authAPI = {
     login: async (email: string, senha: string) => {
         const response = await api.post('/usuario/auth/login', { email, senha });
-        // Salvar token em localStorage se retornar
-        if (response.data.token) {
-            localStorage.setItem('token', response.data.token);
-            // Adicionar token ao header padrão do axios
-            api.defaults.headers.common['Authorization'] = `Bearer ${response.data.token}`;
-        }
         return response.data;
     },
     logout: async () => {
         await api.post('/usuario/auth/logout');
-        // Remover token do localStorage
-        localStorage.removeItem('token');
-        // Remover do header
-        delete api.defaults.headers.common['Authorization'];
     },
     me: async () => {
         const response = await api.get('/usuario/auth/me');
@@ -229,7 +219,7 @@ export const templateAPI = {
         return response.data;
     },
     buscarPublico: async (casalId: number) => {
-        const response = await api.get(`/template/publico/id/${casalId}`);
+        const response = await api.get(`/template/publico/${casalId}`);
         return response.data;
     },
     buscarPublicoPorSlug: async (slug: string) => {

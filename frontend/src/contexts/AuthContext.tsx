@@ -1,7 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { Usuario } from '../lib/services';
 import { authAPI } from '../lib/services';
-import api from '../lib/api';
 
 interface AuthContextType {
     usuario: Usuario | null;
@@ -19,11 +18,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
-        // Recuperar token do localStorage na inicialização
-        const token = localStorage.getItem('token');
-        if (token) {
-            api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-        }
         checkAuth();
     }, []);
 
@@ -33,8 +27,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             setUsuario(user);
         } catch (error) {
             setUsuario(null);
-            localStorage.removeItem('token');
-            delete api.defaults.headers.common['Authorization'];
         } finally {
             setIsLoading(false);
         }
