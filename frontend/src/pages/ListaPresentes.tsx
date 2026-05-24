@@ -16,9 +16,10 @@ export const ListaPresentes: React.FC = () => {
     // Estado para o modal de presente
     const [selectedPresente, setSelectedPresente] = useState<Presente | null>(null);
     const [guestInfo, setGuestInfo] = useState({ nome: '', email: '' });
-    const [pixInfo, setPixInfo] = useState<{ chave: string; transacaoId: number; payloadPix?: string; qrCodeBase64?: string } | null>(null);
+    const [pixInfo, setPixInfo] = useState<{ chave: string; transacaoId: number; confirmacaoToken: string; payloadPix?: string; qrCodeBase64?: string } | null>(null);
     const [submitting, setSubmitting] = useState(false);
     const [copied, setCopied] = useState(false);
+    const [pixExpired, setPixExpired] = useState(false);
 
     useEffect(() => {
         carregarDados();
@@ -74,9 +75,11 @@ export const ListaPresentes: React.FC = () => {
             setPixInfo({
                 chave: response.chave_pix,
                 transacaoId: response.id,
+                confirmacaoToken: response.confirmacao_token,
                 payloadPix: response.payload_pix,
                 qrCodeBase64: response.qr_code_base64,
             });
+            setPixExpired(false);
         } catch (err) {
             setError('Erro ao processar presente. Tente novamente.');
         } finally {
@@ -327,9 +330,11 @@ export const ListaPresentes: React.FC = () => {
                                             setPixInfo({
                                                 chave: response.chave_pix,
                                                 transacaoId: response.id,
+                                                confirmacaoToken: response.confirmacao_token,
                                                 payloadPix: response.payload_pix,
                                                 qrCodeBase64: response.qr_code_base64,
                                             });
+                                            setPixExpired(false);
                                         } catch (err) {
                                             setError('Erro ao gerar cota livre PIX. Tente novamente.');
                                         } finally {
@@ -438,20 +443,47 @@ export const ListaPresentes: React.FC = () => {
 
                                     <button
                                         onClick={async () => {
-                                            if (pixInfo?.transacaoId) {
-                                                try {
-                                                    await transacaoPresenteAPI.confirmarPagamentoPublico(pixInfo.transacaoId);
-                                                } catch (e) {}
+                                            try {
+                                                if (!pixInfo?.transacaoId || !pixInfo.confirmacaoToken) {
+                                                    setError('Confirmacao expirada. Gere um novo PIX para concluir.');
+                                                    setPixExpired(true);
+                                                    return;
+                                                }
+                                                await transacaoPresenteAPI.confirmarPagamentoPublico(
+                                                    pixInfo.transacaoId,
+                                                    pixInfo.confirmacaoToken
+                                                );
+                                                setPixExpired(false);
+                                                setSelectedPresente(null);
+                                                setPixInfo(null);
+                                                setGuestInfo({ nome: '', email: '' });
+                                                alert("Muito obrigado pela contribuição!");
+                                            } catch (err: any) {
+                                                if (err?.response?.status === 401 || err?.response?.status === 403) {
+                                                    setError('Confirmacao expirada ou invalida. Gere um novo PIX para concluir.');
+                                                    setPixExpired(true);
+                                                } else {
+                                                    setError('Nao foi possivel confirmar a contribuicao. Tente novamente.');
+                                                    setPixExpired(false);
+                                                }
                                             }
-                                            setSelectedPresente(null);
-                                            setPixInfo(null);
-                                            setGuestInfo({ nome: '', email: '' });
-                                            alert("Muito obrigado pela contribuição!");
                                         }}
                                         className="btn btn-primary w-full"
                                     >
                                         Concluir Contribuição
                                     </button>
+                                    {pixExpired && (
+                                        <button
+                                            onClick={() => {
+                                                setPixInfo(null);
+                                                setPixExpired(false);
+                                                setError('');
+                                            }}
+                                            className="btn btn-secondary w-full mt-3"
+                                        >
+                                            Gerar novo PIX
+                                        </button>
+                                    )}
                                 </div>
                             )
                         ) : selectedPresente.link_produto ? (

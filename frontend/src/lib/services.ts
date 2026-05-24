@@ -223,8 +223,12 @@ export const transacaoPresenteAPI = {
         const response = await api.post('/transacao-presente/publico/cota-livre', dados);
         return response.data;
     },
-    confirmarPagamentoPublico: async (transacaoId: number) => {
-        const response = await api.post(`/transacao-presente/publico/${transacaoId}/confirmar`);
+    confirmarPagamentoPublico: async (transacaoId: number, token: string) => {
+        const response = await api.post(
+            `/transacao-presente/publico/${transacaoId}/confirmar`,
+            {},
+            { headers: { 'X-Confirm-Token': token } }
+        );
         return response.data;
     },
 };

@@ -2,6 +2,7 @@ from fastapi import APIRouter, Request, Body, HTTPException, status
 from fastapi.responses import JSONResponse
 import logging
 from util.auth_decorator import requer_autenticacao
+from util.confirmacao import gerar_token_confirmacao, validar_token_confirmacao
 from backend.data.model.transacao_presente import TransacaoPresente
 from backend.data.repo import transacao_presente as transacao_repo
 
@@ -211,12 +212,14 @@ async def criar_transacao_publico(request: Request, transacao_data: dict = Body(
             except Exception as e:
                 logger.error(f"Erro ao gerar PIX: {e}")
         
+        confirmacao_token = gerar_token_confirmacao(cod_transacao)
         return JSONResponse({
             "id": cod_transacao,
             "chave_pix": casal.chave_pix if casal else "",
             "payload_pix": payload_pix,
             "qr_code_base64": qr_code_base64,
             "valor": float(valor_estimado) if valor_estimado else 0.0,
+            "confirmacao_token": confirmacao_token,
             "mensagem": "Transação iniciada. Por favor, realize o pagamento via PIX."
         }, status_code=status.HTTP_201_CREATED)
         
@@ -284,24 +287,38 @@ async def criar_cota_livre_publico(request: Request, data: dict = Body(...)):
         )
         qr_code_base64 = gerar_qr_code_base64(payload_pix)
         
+        confirmacao_token = gerar_token_confirmacao(cod_transacao)
         return JSONResponse({
             "id": cod_transacao,
             "chave_pix": casal.chave_pix,
             "payload_pix": payload_pix,
             "qr_code_base64": qr_code_base64,
-            "valor": float(valor)
+            "valor": float(valor),
+            "confirmacao_token": confirmacao_token
         })
     except Exception as e:
         logger.error(f"Erro ao gerar cota livre PIX: {e}")
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
 
 @router.post("/publico/{transacao_id}/confirmar")
-async def confirmar_pagamento_publico(transacao_id: int):
+async def confirmar_pagamento_publico(transacao_id: int, request: Request, data: dict = Body(default=None)):
     """Marca que o convidado confirmou ter realizado o pagamento"""
     try:
+        token = request.headers.get("X-Confirm-Token")
+        if not token:
+            token = (data or {}).get("token")
+        if not token:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token de confirmacao ausente")
+
+        if not validar_token_confirmacao(token, transacao_id):
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Token de confirmacao invalido ou expirado")
+
         transacao = transacao_repo.buscar_por_id(transacao_id)
         if not transacao:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Transação não encontrada")
+
+        if transacao.status_pagamento == "pago":
+            return JSONResponse({"mensagem": "Pagamento ja confirmado"})
         
         transacao.status_pagamento = "pago"
         transacao_repo.atualizar(transacao)
