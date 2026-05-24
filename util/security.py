@@ -35,23 +35,21 @@ def criar_hash_senha(senha: str) -> str:
     return hashed.decode("utf-8")
 
 
-def verificar_senha(senha_plana: str, senha_hash: str) -> bool:
-    """
-    Verifica se a senha em texto plano corresponde ao hash
-    
-    Args:
-        senha_plana: Senha em texto plano
-        senha_hash: Hash da senha armazenado no banco (pode ser bcrypt ou texto puro)
-    """
+def is_bcrypt_hash(senha_hash: str) -> bool:
     if not senha_hash:
         return False
+    return senha_hash.startswith("$2b$") or senha_hash.startswith("$2a$")
+
+
+def verificar_senha(senha_plana: str, senha_hash: str) -> bool:
+    """
+    Verifica se a senha em texto plano corresponde ao hash bcrypt.
+    """
+    if not is_bcrypt_hash(senha_hash):
+        return False
     senha_plana = (senha_plana or "").strip()
-    # Se o hash parece ser bcrypt (começa com $2b$ ou $2a$), usa bcrypt
-    if senha_hash.startswith("$2b$") or senha_hash.startswith("$2a$"):
-        dado = _prepare_password_for_bcrypt(senha_plana)
-        return bcrypt.checkpw(dado, senha_hash.encode("utf-8"))
-    # Senão, compara texto puro (usuários importados com senha em texto)
-    return senha_plana == (senha_hash or "").strip()
+    dado = _prepare_password_for_bcrypt(senha_plana)
+    return bcrypt.checkpw(dado, senha_hash.encode("utf-8"))
 
 
 def gerar_token_redefinicao(tamanho: int = 32) -> str:

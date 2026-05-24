@@ -2,7 +2,7 @@ from fastapi import APIRouter, Request, Body, HTTPException, status
 from fastapi.responses import JSONResponse
 import logging
 from util.auth_decorator import requer_autenticacao, criar_sessao, destruir_sessao
-from util.security import criar_hash_senha, verificar_senha
+from util.security import criar_hash_senha, verificar_senha, is_bcrypt_hash
 from util.rate_limit import enforce_rate_limit, get_limit_from_env
 from util.captcha import enforce_captcha_if_enabled
 from util.csrf import csrf_protection
@@ -117,12 +117,28 @@ async def login(request: Request, credenciais: dict = Body(...)):
         
         # Buscar usuário por email
         usuario = usuario_repo.buscar_por_email(email)
-        
-        if not usuario or not verificar_senha(senha, usuario.senha):
+
+        if not usuario or not usuario.senha:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Email ou senha incorretos"
             )
+
+        if is_bcrypt_hash(usuario.senha):
+            if not verificar_senha(senha, usuario.senha):
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="Email ou senha incorretos"
+                )
+        else:
+            # Migrar senha legada em texto puro para bcrypt no primeiro login valido
+            if senha != usuario.senha:
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="Email ou senha incorretos"
+                )
+            usuario.senha = criar_hash_senha(senha)
+            usuario_repo.atualizar(usuario)
             
         usuario_dict = {
             "id": usuario.id,
