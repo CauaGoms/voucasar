@@ -209,11 +209,3 @@ npm run build
 2. Commit (`git commit -m "Minha feature"`)
 3. Push (`git push origin feature/minha-feature`)
 4. Abra um Pull Request
-
-## 📄 Licença
-
-MIT.
-
----
-
-**Desenvolvido com ❤️ por VouCasar**
