@@ -9,12 +9,29 @@ _LOCK = Lock()
 
 
 def _get_client_ip(request: Request) -> str:
-    forwarded = request.headers.get("x-forwarded-for")
-    if forwarded:
-        return forwarded.split(",")[0].strip()
-    if request.client:
-        return request.client.host
-    return "unknown"
+    """
+    Obtém o IP real do cliente.
+    Só confia em X-Forwarded-For se o IP direto for de uma rede privada
+    (ou seja, um proxy/load-balancer confiável, não o cliente final).
+    Isso evita que clientes injetem um X-Forwarded-For falso para burlar o rate limit.
+    """
+    direct_ip = request.client.host if request.client else None
+
+    # Detecta se o IP direto é de uma rede privada/confiável (proxy/nginx)
+    def _is_private(ip: str) -> bool:
+        return (
+            ip.startswith("10.") or
+            ip.startswith("172.") or
+            ip.startswith("192.168.") or
+            ip in ("127.0.0.1", "::1", "localhost")
+        )
+
+    if direct_ip and _is_private(direct_ip):
+        forwarded = request.headers.get("x-forwarded-for")
+        if forwarded:
+            return forwarded.split(",")[0].strip()
+
+    return direct_ip or "unknown"
 
 
 def enforce_rate_limit(request: Request, key: str, limit: int, window_seconds: int) -> None:

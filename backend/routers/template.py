@@ -10,9 +10,20 @@ from util.auth_decorator import requer_autenticacao
 from util.rate_limit import enforce_rate_limit, get_limit_from_env
 from backend.data.model.template import Template
 from backend.data.repo import template as template_repo
+from backend.data.repo import casal as casal_repo
 
 router = APIRouter(prefix="/template", tags=["template"])
 logger = logging.getLogger(__name__)
+
+
+def _verificar_membro_casal(casal_id: int, usuario_id: int):
+    """Verifica se o usuário é membro do casal. Lança 403 se não for."""
+    casal = casal_repo.buscar_por_id(casal_id)
+    if not casal:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Casal não encontrado")
+    if casal.id_usuario_1 != usuario_id and casal.id_usuario_2 != usuario_id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Acesso negado: você não pertence a este casal")
+    return casal
 
 def gerar_slug_unico(texto: str) -> str:
     """Gera um slug amigável com um sufixo aleatório para garantir unicidade"""
@@ -33,8 +44,11 @@ def gerar_slug_unico(texto: str) -> str:
 @router.post("/{casal_id}")
 @requer_autenticacao()
 async def criar_ou_atualizar_template(casal_id: int, request: Request, usuario_logado: dict = None):
-    """Cria ou atualiza um template para um casal"""
+    """Cria ou atualiza um template para um casal — somente membros do casal podem editar"""
     try:
+        # SEGURANÇA: Verifica que o usuário pertence ao casal (previne IDOR)
+        _verificar_membro_casal(casal_id, usuario_logado.get("id"))
+
         template_data = await request.json()
         # Verificar se template já existe
         template_existente = template_repo.buscar_por_casal(casal_id)
@@ -127,8 +141,11 @@ async def buscar_template_publico(casal_id: int, request: Request):
 @router.get("/{casal_id}")
 @requer_autenticacao()
 async def buscar_template(casal_id: int, request: Request, usuario_logado: dict = None):
-    """Busca um template pelo ID do casal"""
+    """Busca um template pelo ID do casal — somente membros do casal podem acessar"""
     try:
+        # SEGURANÇA: Verifica que o usuário pertence ao casal (previne IDOR)
+        _verificar_membro_casal(casal_id, usuario_logado.get("id"))
+
         template = template_repo.buscar_por_casal(casal_id)
         if not template:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Template não encontrado")
@@ -144,6 +161,8 @@ async def buscar_template(casal_id: int, request: Request, usuario_logado: dict 
             "local_recepcao": template.local_recepcao,
             "is_public": template.is_public
         })
+    except HTTPException as e:
+        raise e
     except Exception as e:
         logger.error(f"Erro ao buscar template: {e}")
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
@@ -151,10 +170,19 @@ async def buscar_template(casal_id: int, request: Request, usuario_logado: dict 
 @router.delete("/{casal_id}")
 @requer_autenticacao()
 async def deletar_template(casal_id: int, request: Request, usuario_logado: dict = None):
-    """Deleta um template"""
+    """Deleta um template — somente o criador do casal (usuário_1) pode deletar"""
     try:
+        # SEGURANÇA: Somente o criador (id_usuario_1) pode deletar o template
+        casal = casal_repo.buscar_por_id(casal_id)
+        if not casal:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Casal não encontrado")
+        if casal.id_usuario_1 != usuario_logado.get("id"):
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Acesso negado: somente o criador pode deletar o template")
+
         template_repo.deletar(casal_id)
         return JSONResponse({"mensagem": "Template deletado com sucesso"})
+    except HTTPException as e:
+        raise e
     except Exception as e:
         logger.error(f"Erro ao deletar template: {e}")
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))

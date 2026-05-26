@@ -7,9 +7,20 @@ from util.rate_limit import enforce_rate_limit, get_limit_from_env
 from util.captcha import enforce_captcha_if_enabled
 from backend.data.model.transacao_presente import TransacaoPresente
 from backend.data.repo import transacao_presente as transacao_repo
+from backend.data.repo import casal as casal_repo
 
 router = APIRouter(prefix="/transacao-presente", tags=["transacao-presente"])
 logger = logging.getLogger(__name__)
+
+
+def _verificar_membro_casal(casal_id: int, usuario_id: int):
+    """Verifica se o usuário é membro do casal. Lança 403 se não for."""
+    casal = casal_repo.buscar_por_id(casal_id)
+    if not casal:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Casal não encontrado")
+    if casal.id_usuario_1 != usuario_id and casal.id_usuario_2 != usuario_id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Acesso negado: você não pertence a este casal")
+    return casal
 
 @router.post("")
 @requer_autenticacao()
@@ -43,11 +54,15 @@ async def criar_transacao_presente(request: Request, transacao_data: dict = Body
 @router.get("/{transacao_id}")
 @requer_autenticacao()
 async def buscar_transacao_endpoint(transacao_id: int, request: Request, usuario_logado: dict = None):
-    """Busca uma transação por ID"""
+    """Busca uma transação por ID — somente membros do casal podem acessar"""
     try:
         transacao = transacao_repo.buscar_por_id(transacao_id)
         if not transacao:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Transação não encontrada")
+
+        # SEGURANÇA: Verifica que o usuário pertence ao casal desta transação (previne IDOR)
+        _verificar_membro_casal(transacao.id_casal, usuario_logado.get("id"))
+
         return JSONResponse({
             "id": transacao.id,
             "id_presente": transacao.id_presente,
@@ -57,6 +72,8 @@ async def buscar_transacao_endpoint(transacao_id: int, request: Request, usuario
             "assinatura_remetente": transacao.assinatura_remetente,
             "status_pagamento": transacao.status_pagamento
         })
+    except HTTPException as e:
+        raise e
     except Exception as e:
         logger.error(f"Erro ao buscar transação: {e}")
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
@@ -64,12 +81,15 @@ async def buscar_transacao_endpoint(transacao_id: int, request: Request, usuario
 @router.put("/{transacao_id}")
 @requer_autenticacao()
 async def atualizar_transacao_endpoint(transacao_id: int, request: Request, transacao_data: dict = Body(...), usuario_logado: dict = None):
-    """Atualiza uma transação"""
+    """Atualiza uma transação — somente membros do casal podem atualizar"""
     try:
         transacao = transacao_repo.buscar_por_id(transacao_id)
         if not transacao:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Transação não encontrada")
-        
+
+        # SEGURANÇA: Verifica que o usuário pertence ao casal desta transação (previne IDOR)
+        _verificar_membro_casal(transacao.id_casal, usuario_logado.get("id"))
+
         transacao.assinatura_remetente = transacao_data.get("assinatura_remetente", transacao.assinatura_remetente)
         transacao.status_pagamento = transacao_data.get("status_pagamento", transacao.status_pagamento)
         
@@ -84,6 +104,8 @@ async def atualizar_transacao_endpoint(transacao_id: int, request: Request, tran
             "status_pagamento": transacao.status_pagamento,
             "mensagem": "Transação atualizada com sucesso"
         })
+    except HTTPException as e:
+        raise e
     except Exception as e:
         logger.error(f"Erro ao atualizar transação: {e}")
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
@@ -91,10 +113,19 @@ async def atualizar_transacao_endpoint(transacao_id: int, request: Request, tran
 @router.delete("/{transacao_id}")
 @requer_autenticacao()
 async def deletar_transacao_endpoint(transacao_id: int, request: Request, usuario_logado: dict = None):
-    """Deleta uma transação"""
+    """Deleta uma transação — somente membros do casal podem deletar"""
     try:
+        transacao = transacao_repo.buscar_por_id(transacao_id)
+        if not transacao:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Transação não encontrada")
+
+        # SEGURANÇA: Verifica que o usuário pertence ao casal desta transação (previne IDOR)
+        _verificar_membro_casal(transacao.id_casal, usuario_logado.get("id"))
+
         transacao_repo.deletar(transacao_id)
         return JSONResponse({"mensagem": "Transação deletada com sucesso"})
+    except HTTPException as e:
+        raise e
     except Exception as e:
         logger.error(f"Erro ao deletar transação: {e}")
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
@@ -102,8 +133,11 @@ async def deletar_transacao_endpoint(transacao_id: int, request: Request, usuari
 @router.get("/casal/{casal_id}")
 @requer_autenticacao()
 async def listar_transacoes_por_casal_endpoint(casal_id: int, request: Request, usuario_logado: dict = None):
-    """Lista transações por casal"""
+    """Lista transações por casal — somente membros do casal podem acessar"""
     try:
+        # SEGURANÇA: Verifica que o usuário pertence ao casal (previne IDOR)
+        _verificar_membro_casal(casal_id, usuario_logado.get("id"))
+
         transacoes = transacao_repo.listar_por_casal(casal_id)
         return JSONResponse([
             {
@@ -116,6 +150,8 @@ async def listar_transacoes_por_casal_endpoint(casal_id: int, request: Request, 
                 "status_pagamento": t.status_pagamento
             } for t in transacoes
         ])
+    except HTTPException as e:
+        raise e
     except Exception as e:
         logger.error(f"Erro ao listar transações por casal: {e}")
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))

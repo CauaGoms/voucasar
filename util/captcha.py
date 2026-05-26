@@ -17,12 +17,26 @@ def _get_captcha_token(request: Request, data: dict | None) -> str:
 
 
 def _get_client_ip(request: Request) -> str:
-    forwarded = request.headers.get("x-forwarded-for")
-    if forwarded:
-        return forwarded.split(",")[0].strip()
-    if request.client:
-        return request.client.host
-    return ""
+    """
+    Só confia em X-Forwarded-For quando o IP direto é de um proxy privado/confiável.
+    Evita spoofing de IP para burlar verificação do captcha.
+    """
+    direct_ip = request.client.host if request.client else None
+
+    def _is_private(ip: str) -> bool:
+        return (
+            ip.startswith("10.") or
+            ip.startswith("172.") or
+            ip.startswith("192.168.") or
+            ip in ("127.0.0.1", "::1", "localhost")
+        )
+
+    if direct_ip and _is_private(direct_ip):
+        forwarded = request.headers.get("x-forwarded-for")
+        if forwarded:
+            return forwarded.split(",")[0].strip()
+
+    return direct_ip or ""
 
 
 def _verify_turnstile(token: str, remoteip: str) -> bool:
