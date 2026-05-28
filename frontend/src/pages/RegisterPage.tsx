@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Mail, Lock, User, AlertCircle, Check } from 'lucide-react';
+import { Mail, Lock, User, AlertCircle, Check, Circle, X } from 'lucide-react';
 import { usuarioAPI } from '../lib/services';
 import { getCaptchaToken } from '../lib/captcha';
 import { useAuth } from '../contexts/AuthContext';
@@ -12,8 +12,6 @@ export const RegisterPage: React.FC = () => {
     const [confirmaSenha, setConfirmaSenha] = useState('');
     const [erro, setErro] = useState('');
     const [isLoading, setIsLoading] = useState(false);
-    const [senhaForte, setSenhaForte] = useState(false);
-
     const navigate = useNavigate();
     const { login, usuario } = useAuth();
 
@@ -23,13 +21,26 @@ export const RegisterPage: React.FC = () => {
         }
     }, [usuario, navigate]);
 
-    useEffect(() => {
-        const temMaiuscula = /[A-Z]/.test(senha);
-        const temMinuscula = /[a-z]/.test(senha);
-        const temNumero = /[0-9]/.test(senha);
-        const temMinimo8 = senha.length >= 8;
-        setSenhaForte(temMaiuscula && temMinuscula && temNumero && temMinimo8);
-    }, [senha]);
+    const regrasSenha = useMemo(() => ({
+        minimo8: senha.length >= 8,
+        maiuscula: /[A-Z]/.test(senha),
+        minuscula: /[a-z]/.test(senha),
+        numero: /[0-9]/.test(senha),
+    }), [senha]);
+
+    const senhaForte = regrasSenha.minimo8 && regrasSenha.maiuscula && regrasSenha.minuscula && regrasSenha.numero;
+
+    const senhasIguais = useMemo(
+        () => confirmaSenha.length > 0 && senha === confirmaSenha,
+        [senha, confirmaSenha]
+    );
+
+    const itensRegrasSenha = [
+        { id: 'minimo8', label: 'Mínimo de 8 caracteres', ok: regrasSenha.minimo8 },
+        { id: 'maiuscula', label: 'Pelo menos uma letra maiúscula', ok: regrasSenha.maiuscula },
+        { id: 'minuscula', label: 'Pelo menos uma letra minúscula', ok: regrasSenha.minuscula },
+        { id: 'numero', label: 'Pelo menos um número', ok: regrasSenha.numero },
+    ] as const;
 
     const validarFormulario = () => {
         if (!nome.trim()) {
@@ -164,13 +175,8 @@ export const RegisterPage: React.FC = () => {
                         </div>
 
                         <div className="space-y-1.5">
-                            <label htmlFor="senha" className="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1 flex justify-between">
-                                <span>Senha</span>
-                                {senha && (
-                                    <span className={senhaForte ? 'text-green-600' : 'text-orange-500'}>
-                                        {senhaForte ? 'Forte' : 'Muito curta'}
-                                    </span>
-                                )}
+                            <label htmlFor="senha" className="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1">
+                                Senha
                             </label>
                             <div className="relative group">
                                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-primary-500 transition-colors" size={18} />
@@ -182,8 +188,32 @@ export const RegisterPage: React.FC = () => {
                                     className="w-full bg-white border border-gray-100 focus:border-primary-400 focus:ring-4 focus:ring-primary-400/10 rounded-2xl py-3.5 pl-11 pr-4 text-gray-900 text-sm transition-all outline-none shadow-sm"
                                     placeholder="••••••••"
                                     required
+                                    aria-describedby={senha.length > 0 ? 'regras-senha' : undefined}
                                 />
                             </div>
+                            {senha.length > 0 && (
+                                <ul
+                                    id="regras-senha"
+                                    className="mt-2 space-y-1.5 rounded-xl bg-white/80 border border-gray-100 px-3 py-2.5 shadow-sm"
+                                    aria-live="polite"
+                                >
+                                    {itensRegrasSenha.map((item) => (
+                                        <li
+                                            key={item.id}
+                                            className={`flex items-center gap-2 text-xs font-medium transition-colors duration-200 ${
+                                                item.ok ? 'text-green-600' : 'text-gray-400'
+                                            }`}
+                                        >
+                                            {item.ok ? (
+                                                <Check className="h-3.5 w-3.5 flex-shrink-0" strokeWidth={2.5} />
+                                            ) : (
+                                                <Circle className="h-3.5 w-3.5 flex-shrink-0" strokeWidth={2} />
+                                            )}
+                                            <span>{item.label}</span>
+                                        </li>
+                                    ))}
+                                </ul>
+                            )}
                         </div>
 
                         <div className="space-y-1.5">
@@ -198,13 +228,32 @@ export const RegisterPage: React.FC = () => {
                                     className="w-full bg-white border border-gray-100 focus:border-primary-400 focus:ring-4 focus:ring-primary-400/10 rounded-2xl py-3.5 pl-11 pr-4 text-gray-900 text-sm transition-all outline-none shadow-sm"
                                     placeholder="••••••••"
                                     required
+                                    aria-describedby={confirmaSenha.length > 0 ? 'conferencia-senhas' : undefined}
                                 />
                             </div>
+                            {confirmaSenha.length > 0 && (
+                                <p
+                                    id="conferencia-senhas"
+                                    className={`mt-2 flex items-center gap-2 rounded-xl border px-3 py-2.5 text-xs font-medium shadow-sm transition-colors duration-200 ${
+                                        senhasIguais
+                                            ? 'border-green-100 bg-green-50/80 text-green-600'
+                                            : 'border-red-100 bg-red-50/80 text-red-600'
+                                    }`}
+                                    aria-live="polite"
+                                >
+                                    {senhasIguais ? (
+                                        <Check className="h-3.5 w-3.5 flex-shrink-0" strokeWidth={2.5} />
+                                    ) : (
+                                        <X className="h-3.5 w-3.5 flex-shrink-0" strokeWidth={2.5} />
+                                    )}
+                                    {senhasIguais ? 'As senhas coincidem' : 'As senhas não coincidem'}
+                                </p>
+                            )}
                         </div>
 
                         <button
                             type="submit"
-                            disabled={isLoading || !senhaForte}
+                            disabled={isLoading || !senhaForte || !senhasIguais}
                             className="w-full bg-primary-600 hover:bg-primary-700 disabled:opacity-50 text-white font-bold py-4 rounded-2xl transition-all shadow-lg shadow-primary-500/30 hover:-translate-y-0.5"
                         >
                             {isLoading ? 'Criando sua conta...' : 'Criar minha conta'}
