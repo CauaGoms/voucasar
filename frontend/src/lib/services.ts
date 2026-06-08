@@ -22,6 +22,7 @@ export interface Casal {
     id_usuario_2: number;
     email_usuario_2: string;
     chave_pix: string;
+    tipo_chave_pix: string;
     data_casamento: string;
 }
 

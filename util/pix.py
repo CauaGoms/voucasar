@@ -4,6 +4,9 @@ from io import BytesIO
 import unicodedata
 import re
 
+# Tipos válidos de chave PIX
+TIPOS_CHAVE_PIX_VALIDOS = ['cpf', 'email', 'telefone', 'aleatoria']
+
 def format_pix_value(id_field, value):
     return f"{id_field}{len(value):02d}{value}"
 
@@ -31,51 +34,81 @@ def calculate_crc16(payload):
     # Correção do bug: formata diretamente para hex com 4 dígitos preenchidos com zero
     return f"{crc:04X}"
 
-def normalizar_chave_pix(chave: str) -> str:
+def normalizar_chave_pix(chave: str, tipo_chave: str = "aleatoria") -> str:
     """
-    Normaliza a chave PIX para o formato exigido pelo EMVCo/Banco Central:
-    - CPF formatado: '123.456.789-09'   => '12345678909'
-    - CNPJ formatado: '12.345.678/0001-90' => '12345678000190'
-    - Celular com máscara: '(11) 99999-9999' => '+5511999999999'
-    - Celular com código país: '+5511999999999' => '+5511999999999'
-    - CPF/celular sem formatação: mantém como está (BC aceita ambos)
-    - Email / chave aleatória (UUID): mantém como está
+    Normaliza a chave PIX para o formato exigido pelo EMVCo/Banco Central.
+    
+    Tipos suportados:
+    - cpf: Valida e normaliza CPF
+    - email: Valida e retorna email em minúsculas
+    - telefone: Valida e normaliza telefone para E.164
+    - aleatoria: Retorna como está (UUID)
+    
+    Args:
+        chave: A chave PIX a ser normalizada
+        tipo_chave: O tipo da chave PIX ('cpf', 'email', 'telefone', 'aleatoria')
+    
+    Returns:
+        Chave normalizada
+        
+    Raises:
+        ValueError: Se o tipo for inválido ou a chave não corresponder ao tipo
     """
+    if tipo_chave not in TIPOS_CHAVE_PIX_VALIDOS:
+        raise ValueError(f"Tipo de chave inválido: {tipo_chave}. Tipos válidos: {', '.join(TIPOS_CHAVE_PIX_VALIDOS)}")
+    
     chave = chave.strip()
     apenas_digitos = re.sub(r'\D', '', chave)
-
-    # Celular com indicadores EXPLÍCITOS de telefone: parênteses, espaços, ou prefixo +
-    tem_formato_telefone = bool(re.search(r'[\(\) ]', chave)) or chave.startswith('+')
-
-    if tem_formato_telefone and len(apenas_digitos) in (10, 11, 12, 13):
+    
+    # Validação e normalização por tipo
+    if tipo_chave == "cpf":
+        # CPF deve ter 11 dígitos
+        if len(apenas_digitos) != 11:
+            raise ValueError(f"CPF inválido: deve ter 11 dígitos, recebido {len(apenas_digitos)}")
+        return apenas_digitos
+    
+    elif tipo_chave == "email":
+        # Email deve conter @ e ser válido
+        if '@' not in chave or len(chave) < 5:
+            raise ValueError(f"Email inválido: {chave}")
+        return chave.lower()
+    
+    elif tipo_chave == "telefone":
+        # Telefone deve ter 10 ou 11 dígitos (+ código país opcional)
         if chave.startswith('+'):
-            return chave  # Já está em E.164
-        if len(apenas_digitos) == 13 and apenas_digitos.startswith('55'):
-            return f'+{apenas_digitos}'
-        if len(apenas_digitos) == 12 and apenas_digitos.startswith('55'):
-            return f'+{apenas_digitos}'
-        if len(apenas_digitos) in (10, 11):
-            return f'+55{apenas_digitos}'
-
-    # CPF formatado com pontos e hífen: 'xxx.xxx.xxx-xx' => 11 dígitos
-    if re.match(r'^\d{3}\.\d{3}\.\d{3}-\d{2}$', chave):
-        return apenas_digitos
-
-    # CNPJ formatado: 'xx.xxx.xxx/xxxx-xx' => 14 dígitos
-    if re.match(r'^\d{2}\.\d{3}\.\d{3}/\d{4}-\d{2}$', chave):
-        return apenas_digitos
-
-    # CNPJ só dígitos sem formatação (14 dígitos numéricos puros)
-    if re.match(r'^\d{14}$', chave):
+            # Já está em E.164
+            if not re.match(r'^\+\d{11,13}$', chave):
+                raise ValueError(f"Telefone em E.164 inválido: {chave}")
+            return chave
+        
+        # Detectar se tem formatação de telefone
+        tem_formato_telefone = bool(re.search(r'[\(\) \-]', chave))
+        
+        if tem_formato_telefone or len(apenas_digitos) in (10, 11, 12, 13):
+            # Normalizar para E.164
+            if len(apenas_digitos) == 13 and apenas_digitos.startswith('55'):
+                return f'+{apenas_digitos}'
+            elif len(apenas_digitos) == 12 and apenas_digitos.startswith('55'):
+                return f'+{apenas_digitos}'
+            elif len(apenas_digitos) in (10, 11):
+                return f'+55{apenas_digitos}'
+            else:
+                raise ValueError(f"Telefone inválido: {chave}")
+        else:
+            raise ValueError(f"Telefone inválido: {chave}")
+    
+    elif tipo_chave == "aleatoria":
+        # UUID/chave aleatória: retorna como está
+        if len(chave) < 5:
+            raise ValueError(f"Chave aleatória muito curta: {chave}")
         return chave
-
-    # Email, chave aleatória (UUID), CPF/celular sem formatação: retorna como está
+    
     return chave
 
 
-def gerar_payload_pix(chave_pix, valor, nome_recebedor, cidade_recebedor, txid="***"):
-    # Normaliza chave PIX para o formato correto exigido pelo Banco Central
-    chave_pix = normalizar_chave_pix(chave_pix)
+def gerar_payload_pix(chave_pix, tipo_chave_pix, valor, nome_recebedor, cidade_recebedor, txid="***"):
+    # Valida e normaliza chave PIX de acordo com seu tipo
+    chave_pix = normalizar_chave_pix(chave_pix, tipo_chave_pix)
 
     # Sanitize inputs (no accents, uppercase)
     nome_recebedor = remove_accents(nome_recebedor).upper()[:25]

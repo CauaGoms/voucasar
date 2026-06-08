@@ -20,10 +20,12 @@ export const DashboardPage: React.FC = () => {
     const [inviteEmail, setInviteEmail] = useState('');
     const [inviteLoading, setInviteLoading] = useState(false);
     const [newPixKey, setNewPixKey] = useState('');
+    const [newPixKeyType, setNewPixKeyType] = useState('aleatoria');
     const [formData, setFormData] = useState({
         emailNoivo: '',
         dataCasamento: '',
         chavePix: '',
+        tipoChavePix: 'aleatoria',
     });
     const [copiedId, setCopiedId] = useState<number | null>(null);
     const [countdown, setCountdown] = useState({ dias: 0, horas: 0, minutos: 0, segundos: 0 });
@@ -81,7 +83,7 @@ export const DashboardPage: React.FC = () => {
             setLoading(true);
             const dados = await casalAPI.listar();
             setCasais(dados);
-            
+
             try {
                 const convs = await casalAPI.listarConvites();
                 setConvites(convs || []);
@@ -118,6 +120,7 @@ export const DashboardPage: React.FC = () => {
                 email_usuario_2: formData.emailNoivo,
                 data_casamento: formData.dataCasamento,
                 chave_pix: formData.chavePix,
+                tipo_chave_pix: formData.tipoChavePix,
             } as Casal);
 
             // Auto-create template after creating casal
@@ -141,6 +144,7 @@ export const DashboardPage: React.FC = () => {
                 emailNoivo: '',
                 dataCasamento: '',
                 chavePix: '',
+                tipoChavePix: 'aleatoria',
             });
             setShowForm(false);
             setError('');
@@ -254,12 +258,12 @@ export const DashboardPage: React.FC = () => {
                                     </div>
                                 </div>
                                 <div className="flex gap-3 w-full md:w-auto">
-                                    <button 
+                                    <button
                                         onClick={async () => {
                                             try {
                                                 await casalAPI.aceitarConvite(convite.id);
                                                 await carregarCasais();
-                                            } catch(e) {
+                                            } catch (e) {
                                                 setError('Erro ao aceitar convite');
                                             }
                                         }}
@@ -411,6 +415,26 @@ export const DashboardPage: React.FC = () => {
                             </div>
 
                             <div>
+                                <label className="text-[10px] font-bold tracking-[0.1em] text-[#a89073] uppercase ml-1">Tipo de Chave PIX</label>
+                                <select
+                                    value={formData.tipoChavePix}
+                                    onChange={(e) =>
+                                        setFormData({
+                                            ...formData,
+                                            tipoChavePix: e.target.value,
+                                        })
+                                    }
+                                    className="w-full h-12 px-4 bg-gray-50 border border-gray-100 rounded-2xl focus:border-primary-400 outline-none font-medium"
+                                    required
+                                >
+                                    <option value="aleatoria">Chave Aleatória (UUID)</option>
+                                    <option value="cpf">CPF</option>
+                                    <option value="email">Email</option>
+                                    <option value="telefone">Telefone</option>
+                                </select>
+                            </div>
+
+                            <div>
                                 <label className="text-[10px] font-bold tracking-[0.1em] text-[#a89073] uppercase ml-1">Chave PIX para Presentes</label>
                                 <input
                                     type="text"
@@ -422,7 +446,12 @@ export const DashboardPage: React.FC = () => {
                                         })
                                     }
                                     className="w-full h-12 px-4 bg-gray-50 border border-gray-100 rounded-2xl focus:border-primary-400 outline-none font-medium"
-                                    placeholder="Apenas Chave Aleatória"
+                                    placeholder={
+                                        formData.tipoChavePix === 'cpf' ? 'Ex: 12345678901' :
+                                            formData.tipoChavePix === 'email' ? 'Ex: email@example.com' :
+                                                formData.tipoChavePix === 'telefone' ? 'Ex: (11) 99999-9999' :
+                                                    'Cole sua chave aleatória aqui'
+                                    }
                                     required
                                 />
                             </div>
@@ -510,6 +539,7 @@ export const DashboardPage: React.FC = () => {
                                     <button
                                         onClick={() => {
                                             setNewPixKey(casal.chave_pix || '');
+                                            setNewPixKeyType(casal.tipo_chave_pix || 'aleatoria');
                                             setShowPixModal(true);
                                         }}
                                         className="p-2 hover:bg-white rounded-xl text-primary-600 transition-colors border border-transparent hover:border-primary-100"
@@ -538,14 +568,32 @@ export const DashboardPage: React.FC = () => {
                         <div className="bg-white rounded-[2.5rem] p-8 max-w-sm w-full shadow-2xl animate-scale-in">
                             <h3 className="text-2xl font-serif font-bold text-gray-900 mb-2">Configurar PIX</h3>
                             <p className="text-sm text-gray-600 mb-6 leading-relaxed">
-                                Insira sua chave PIX principal. É para esta chave que os presentes financeiros serão enviados.
+                                Selecione o tipo de chave PIX e insira o valor. É para esta chave que os presentes financeiros serão enviados.
                             </p>
+                            <div className="mb-6">
+                                <label className="text-[10px] font-bold tracking-[0.1em] text-[#a89073] uppercase ml-1 block mb-2">Tipo de Chave PIX</label>
+                                <select
+                                    value={newPixKeyType}
+                                    onChange={(e) => setNewPixKeyType(e.target.value)}
+                                    className="w-full h-12 px-4 bg-gray-50 border border-gray-100 rounded-2xl focus:border-primary-400 outline-none font-medium"
+                                >
+                                    <option value="aleatoria">Chave Aleatória (UUID)</option>
+                                    <option value="cpf">CPF</option>
+                                    <option value="email">Email</option>
+                                    <option value="telefone">Telefone</option>
+                                </select>
+                            </div>
                             <input
                                 type="text"
                                 value={newPixKey}
                                 onChange={(e) => setNewPixKey(e.target.value)}
                                 className="w-full h-12 px-4 bg-gray-50 border border-gray-100 rounded-2xl focus:border-primary-400 outline-none mb-6 font-medium"
-                                placeholder="CPF, E-mail ou Aleatória"
+                                placeholder={
+                                    newPixKeyType === 'cpf' ? 'Ex: 12345678901' :
+                                        newPixKeyType === 'email' ? 'Ex: seu.email@example.com' :
+                                            newPixKeyType === 'telefone' ? 'Ex: (11) 99999-9999' :
+                                                'Cole sua chave aleatória aqui'
+                                }
                             />
                             <div className="flex gap-3">
                                 <button
@@ -558,7 +606,11 @@ export const DashboardPage: React.FC = () => {
                                     onClick={async () => {
                                         if (casais[0]) {
                                             try {
-                                                await casalAPI.atualizar(casais[0].id, { ...casais[0], chave_pix: newPixKey });
+                                                await casalAPI.atualizar(casais[0].id, {
+                                                    ...casais[0],
+                                                    chave_pix: newPixKey,
+                                                    tipo_chave_pix: newPixKeyType
+                                                });
                                                 setShowPixModal(false);
                                                 carregarCasais();
                                             } catch (e) { setError('Erro ao atualizar PIX'); }

@@ -22,6 +22,7 @@ def inserir(casal: Casal, cursor=None) -> Optional[int]:
             casal.id_usuario_2,
             casal.email_usuario_2,
             casal.chave_pix,
+            casal.tipo_chave_pix,
             casal.data_casamento
         ))
         return cursor.lastrowid
@@ -33,6 +34,7 @@ def inserir(casal: Casal, cursor=None) -> Optional[int]:
                 casal.id_usuario_2,
                 casal.email_usuario_2,
                 casal.chave_pix,
+                casal.tipo_chave_pix,
                 casal.data_casamento
             ))
             cod_casal = cursor.lastrowid
@@ -67,7 +69,8 @@ def listar_todos() -> list[Casal]:
                     id_usuario_2=resultado[2],
                     email_usuario_2=resultado[3],
                     chave_pix=resultado[4],
-                    data_casamento=resultado[5]
+                    tipo_chave_pix=resultado[5],
+                    data_casamento=resultado[6]
                 ))
             return casais
     except Exception as e:
@@ -89,7 +92,8 @@ def listar_por_usuario(cod_usuario: int) -> list[Casal]:
                     id_usuario_2=resultado[2],
                     email_usuario_2=resultado[3],
                     chave_pix=resultado[4],
-                    data_casamento=resultado[5]
+                    tipo_chave_pix=resultado[5],
+                    data_casamento=resultado[6]
                 ))
             return casais
     except Exception as e:
@@ -105,6 +109,7 @@ def atualizar(casal: Casal) -> bool:
                 casal.id_usuario_2,
                 casal.email_usuario_2,
                 casal.chave_pix,
+                casal.tipo_chave_pix,
                 casal.data_casamento,
                 casal.id
             ))
@@ -129,7 +134,8 @@ def buscar_por_id(cod_casal: int) -> Optional[Casal]:
                     id_usuario_2=resultado[2],
                     email_usuario_2=resultado[3],
                     chave_pix=resultado[4],
-                    data_casamento=resultado[5]
+                    tipo_chave_pix=resultado[5],
+                    data_casamento=resultado[6]
                 )
             return None
     except Exception as e:
@@ -179,7 +185,8 @@ def buscar_convites_pendentes(email: str) -> list[Casal]:
                     id_usuario_2=resultado[2],
                     email_usuario_2=resultado[3],
                     chave_pix=resultado[4],
-                    data_casamento=resultado[5]
+                    tipo_chave_pix=resultado[5],
+                    data_casamento=resultado[6]
                 ))
             return casais
     except Exception as e:

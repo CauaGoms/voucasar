@@ -8,4 +8,5 @@ class Casal:
     id_usuario_2: int
     email_usuario_2: str
     chave_pix: str
+    tipo_chave_pix: str  # cpf, email, telefone, aleatoria
     data_casamento: datetime

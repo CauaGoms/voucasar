@@ -7,8 +7,64 @@ Plataforma completa para gerenciar listas de casamento: cadastro de casais, pres
 - Autenticação por sessão com cookies e proteção CSRF
 - Lista de presentes com fluxo público para convidados
 - Templates públicos do casamento com slug amigável
-- Geração de PIX e QR Code para contribuições
+- **Geração de PIX com suporte a múltiplos tipos de chave (CPF, Email, Telefone, Aleatória)**
 - Docker Compose pronto para desenvolvimento/produção
+
+## 📋 Alterações Recentes
+
+### ✅ Seleção de Tipo de Chave PIX (Nova Funcionalidade - 8 de Junho de 2026)
+
+O sistema agora permite que os casais selecionem o tipo de chave PIX que desejam utilizar:
+
+**Tipos de Chave Suportados:**
+- **Chave Aleatória**: UUID gerada aleatoriamente
+- **CPF**: Chave com validação de 11 dígitos
+- **Email**: Endereço de email como chave
+- **Telefone**: Número de telefone com formatação E.164
+
+**Mudanças Implementadas:**
+
+1. **Banco de Dados**
+   - Nova coluna `tipo_chave_pix` na tabela `Casal`
+   - Valor padrão: `'aleatoria'`
+   - Migration script em `scratch/add_tipo_chave_pix.py`
+
+2. **Backend (util/pix.py)**
+   - Função `normalizar_chave_pix()` agora valida o tipo de chave
+   - Função `gerar_payload_pix()` agora aceita parâmetro `tipo_chave_pix`
+   - Validação rigorosa por tipo com mensagens de erro descritivas
+
+3. **API (backend/routers/casal.py)**
+   - POST/PUT `/api/casal` agora aceita `tipo_chave_pix`
+   - Validação de tipos válidos na criação/atualização
+
+4. **Geração de PIX**
+   - Transações em `backend/routers/transacao_presente.py` agora passam o tipo ao gerar PIX
+   - Tratamento correto da chave baseado no tipo informado
+
+5. **Frontend (DashboardPage.tsx)**
+   - Novo dropdown para selecionar tipo de chave na criação do casamento
+   - Modal de configuração de PIX com seletor de tipo
+   - Placeholders contextuais conforme o tipo selecionado
+   - Campo `tipo_chave_pix` adicionado à interface `Casal`
+
+**Como Usar:**
+
+1. Execute a migration (caso necessário):
+   ```bash
+   python scratch/add_tipo_chave_pix.py
+   ```
+
+2. No frontend, ao criar um casamento ou configurar PIX:
+   - Selecione o tipo de chave desejado
+   - Insira o valor de acordo com o tipo
+   - O sistema validará e normalizará automaticamente
+
+**Validações:**
+- CPF: Deve ter exatamente 11 dígitos
+- Email: Deve conter @ e ser válido
+- Telefone: Aceita formatações variadas, normaliza para E.164
+- Aleatória: UUID/string com no mínimo 5 caracteres
 
 ## 🧭 Visão Geral
 

@@ -16,12 +16,23 @@ async def criar_casal(request: Request, usuario_logado: dict = None):
     """Cria um novo casal"""
     try:
         casal_data = await request.json()
+        tipo_chave = casal_data.get("tipo_chave_pix", "aleatoria").lower()
+        
+        # Validar tipo de chave
+        from util.pix import TIPOS_CHAVE_PIX_VALIDOS
+        if tipo_chave not in TIPOS_CHAVE_PIX_VALIDOS:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST, 
+                detail=f"Tipo de chave inválido. Tipos válidos: {', '.join(TIPOS_CHAVE_PIX_VALIDOS)}"
+            )
+        
         casal = Casal(
             id=0,
             id_usuario_1=usuario_logado.get("id"),  # Sempre usa o ID do usuário logado, nunca do body
             id_usuario_2=None,
             email_usuario_2=casal_data.get("email_usuario_2"),
             chave_pix=casal_data.get("chave_pix"),
+            tipo_chave_pix=tipo_chave,
             data_casamento=casal_data.get("data_casamento")
         )
         cod_casal = casal_repo.inserir(casal)
@@ -31,9 +42,12 @@ async def criar_casal(request: Request, usuario_logado: dict = None):
             "id_usuario_2": casal.id_usuario_2,
             "email_usuario_2": casal.email_usuario_2,
             "chave_pix": casal.chave_pix,
+            "tipo_chave_pix": casal.tipo_chave_pix,
             "data_casamento": str(casal.data_casamento),
             "mensagem": "Casal criado com sucesso"
         }, status_code=status.HTTP_201_CREATED)
+    except HTTPException as e:
+        raise e
     except Exception as e:
         logger.error(f"Erro ao criar casal: {e}")
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
@@ -56,6 +70,7 @@ async def buscar_casal_endpoint(casal_id: int, request: Request, usuario_logado:
             "id_usuario_2": casal.id_usuario_2,
             "email_usuario_2": casal.email_usuario_2,
             "chave_pix": casal.chave_pix,
+            "tipo_chave_pix": casal.tipo_chave_pix,
             "data_casamento": str(casal.data_casamento)
         })
     except HTTPException as e:
@@ -79,6 +94,17 @@ async def atualizar_casal_endpoint(casal_id: int, request: Request, usuario_loga
         if casal.id_usuario_1 != usuario_id:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Acesso negado: somente o criador do casal pode editá-lo")
         
+        # Validar tipo de chave se for fornecido
+        if "tipo_chave_pix" in casal_data:
+            tipo_chave = casal_data.get("tipo_chave_pix", "aleatoria").lower()
+            from util.pix import TIPOS_CHAVE_PIX_VALIDOS
+            if tipo_chave not in TIPOS_CHAVE_PIX_VALIDOS:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST, 
+                    detail=f"Tipo de chave inválido. Tipos válidos: {', '.join(TIPOS_CHAVE_PIX_VALIDOS)}"
+                )
+            casal.tipo_chave_pix = tipo_chave
+        
         # SEGURANÇA: id_usuario_1 não pode ser alterado via body (fixado ao criador)
         casal.email_usuario_2 = casal_data.get("email_usuario_2", casal.email_usuario_2)
         casal.chave_pix = casal_data.get("chave_pix", casal.chave_pix)
@@ -92,6 +118,7 @@ async def atualizar_casal_endpoint(casal_id: int, request: Request, usuario_loga
             "id_usuario_2": casal.id_usuario_2,
             "email_usuario_2": casal.email_usuario_2,
             "chave_pix": casal.chave_pix,
+            "tipo_chave_pix": casal.tipo_chave_pix,
             "data_casamento": str(casal.data_casamento),
             "mensagem": "Casal atualizado com sucesso"
         })

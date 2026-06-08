@@ -248,6 +248,7 @@ async def criar_transacao_publico(request: Request, transacao_data: dict = Body(
                 txid = f"VCASAR{cod_transacao:04d}"
                 payload_pix = gerar_payload_pix(
                     chave_pix=casal.chave_pix,
+                    tipo_chave_pix=casal.tipo_chave_pix,
                     valor=valor_estimado,
                     nome_recebedor="Casamento",
                     cidade_recebedor="Brasil",
@@ -332,6 +333,7 @@ async def criar_cota_livre_publico(request: Request, data: dict = Body(...)):
         
         payload_pix = gerar_payload_pix(
             chave_pix=casal.chave_pix,
+            tipo_chave_pix=casal.tipo_chave_pix,
             valor=float(valor),
             nome_recebedor="Casamento",
             cidade_recebedor="Brasil",
